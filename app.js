@@ -24,9 +24,10 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
 // Ruta de prueba
-app.get("/", (req, res) => {
-    res.render("pages/home", { titulo: "Fotaza 2" });
-});
+import indexRoutes from "./routes/index.js";
+
+app.use("/", indexRoutes);
+
 
 // Servidor
 app.listen(PORT, () => {
