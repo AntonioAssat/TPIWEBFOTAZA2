@@ -25,9 +25,10 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // Ruta de prueba
 import indexRoutes from "./routes/index.js";
-
 app.use("/", indexRoutes);
 
+import userRoutes from "./routes/userRoutes.js";
+app.use("/", userRoutes);
 
 // Servidor
 app.listen(PORT, () => {

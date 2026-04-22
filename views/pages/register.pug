@@ -1,0 +1,21 @@
+doctype html
+html
+  head
+    title Registro
+  body
+    h1 Registro de usuario
+
+    form(action="/registro" method="POST")
+      div
+        label Usuario:
+        input(type="text" name="username" required)
+
+      div
+        label Email:
+        input(type="email" name="email" required)
+
+      div
+        label Password:
+        input(type="password" name="password" required)
+
+      button(type="submit") Registrarse
