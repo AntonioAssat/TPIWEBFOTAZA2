@@ -37,10 +37,22 @@ export const createPost = async (req, res) => {
 
 export const showPosts = async (req, res) => {
     try {
-        const data = await fs.readFile(path, "utf-8");
-        const publicaciones = JSON.parse(data);
+        const dataPub = await fs.readFile(path, "utf-8");
+        const publicaciones = JSON.parse(dataPub);
 
-        res.render("pages/posts", { publicaciones });
+        const dataImg = await fs.readFile(pathImagenes, "utf-8");
+        const imagenes = JSON.parse(dataImg);
+
+        // Unir imágenes con publicaciones
+        const publicacionesConImagenes = publicaciones.map(pub => {
+            const imgs = imagenes.filter(img => img.publicacion_id === pub.id);
+            return {
+                ...pub,
+                imagenes: imgs
+            };
+        });
+
+        res.render("pages/posts", { publicaciones: publicacionesConImagenes });
 
     } catch (error) {
         console.error(error);

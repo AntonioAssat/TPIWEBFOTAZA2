@@ -12,5 +12,12 @@
     "descripcion": "prueba de subir imagen pero al json",
     "usuario_id": 1,
     "fecha": "2026-04-23T21:57:05.009Z"
+  },
+  {
+    "id": 3,
+    "titulo": "pruebawater",
+    "descripcion": "prueba",
+    "usuario_id": 1,
+    "fecha": "2026-04-23T23:13:21.537Z"
   }
 ]
