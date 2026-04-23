@@ -37,6 +37,9 @@ app.use("/", indexRoutes);
 import userRoutes from "./routes/userRoutes.js";
 app.use("/", userRoutes);
 
+import publicacionesRoutes from "./routes/publicacionesRoutes.js";
+app.use("/", publicacionesRoutes);
+
 // Servidor
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);
