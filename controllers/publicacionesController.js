@@ -34,3 +34,16 @@ export const createPost = async (req, res) => {
         res.send("Error al crear publicación");
     }
 };
+
+export const showPosts = async (req, res) => {
+    try {
+        const data = await fs.readFile(path, "utf-8");
+        const publicaciones = JSON.parse(data);
+
+        res.render("pages/posts", { publicaciones });
+
+    } catch (error) {
+        console.error(error);
+        res.send("Error al cargar publicaciones");
+    }
+};
