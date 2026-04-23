@@ -5,5 +5,12 @@
     "descripcion": "publi prueba",
     "usuario_id": 1,
     "fecha": "2026-04-23T21:36:43.946Z"
+  },
+  {
+    "id": 2,
+    "titulo": "prueba2",
+    "descripcion": "prueba de subir imagen pero al json",
+    "usuario_id": 1,
+    "fecha": "2026-04-23T21:57:05.009Z"
   }
 ]

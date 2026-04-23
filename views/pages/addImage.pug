@@ -1,0 +1,23 @@
+doctype html
+html
+  head
+    title Agregar imagen
+  body
+    h1 Agregar imagen
+
+    form(action=`/publicaciones/${publicacionId}/imagen` method="POST")
+      div
+        label URL:
+        input(type="text" name="url" required)
+
+      div
+        label Licencia:
+        select(name="licencia")
+          option(value="copyright") Copyright
+          option(value="sin_copyright") Sin copyright
+
+      div
+        label Watermark (opcional):
+        input(type="text" name="watermark")
+
+      button(type="submit") Agregar imagen

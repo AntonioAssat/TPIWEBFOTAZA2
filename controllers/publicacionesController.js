@@ -47,3 +47,40 @@ export const showPosts = async (req, res) => {
         res.send("Error al cargar publicaciones");
     }
 };
+//para las imagenes de las publicaciones
+const pathImagenes = "./data/imagenes.json";
+
+// Mostrar formulario
+export const showAddImage = (req, res) => {
+    const publicacionId = req.params.id;
+    res.render("pages/addImage", { publicacionId });
+};
+
+// Agregar imagen
+export const addImage = async (req, res) => {
+    const { url, licencia, watermark } = req.body;
+    const publicacionId = req.params.id;
+
+    try {
+        const data = await fs.readFile(pathImagenes, "utf-8");
+        const imagenes = JSON.parse(data);
+
+        const nuevaImagen = {
+            id: imagenes.length + 1,
+            url,
+            licencia,
+            watermark: watermark || null,
+            publicacion_id: parseInt(publicacionId)
+        };
+
+        imagenes.push(nuevaImagen);
+
+        await fs.writeFile(pathImagenes, JSON.stringify(imagenes, null, 2));
+
+        res.send("Imagen agregada");
+
+    } catch (error) {
+        console.error(error);
+        res.send("Error al agregar imagen");
+    }
+};
