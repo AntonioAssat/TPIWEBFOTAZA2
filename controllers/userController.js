@@ -1,22 +1,47 @@
-let usuarios = []; // almacenamiento temporal
+import fs from "fs/promises";
 
+const path = "./data/usuarios.json";
+
+// Mostrar formulario
 export const showRegister = (req, res) => {
     res.render("pages/register");
 };
 
-export const registerUser = (req, res) => {
+// Registrar usuario
+export const registerUser = async (req, res) => {
     const { username, email, password } = req.body;
 
-    const nuevoUsuario = {
-        id: usuarios.length + 1,
-        username,
-        email,
-        password
-    };
+    try {
+        // Leer archivo
+        const data = await fs.readFile(path, "utf-8");
+        const usuarios = JSON.parse(data);
 
-    usuarios.push(nuevoUsuario);
+        // 🔒 Validar si ya existe el email
+        const existe = usuarios.find(u => u.email === email);
+        if (existe) {
+            return res.send("El usuario ya existe");
+        }
 
-    console.log(usuarios);
+        // Crear usuario nuevo
+        const nuevoUsuario = {
+            id: usuarios.length + 1,
+            username,
+            email,
+            password
+        };
 
-    res.send("Usuario registrado correctamente");
+        // Agregar al array
+        usuarios.push(nuevoUsuario);
+
+        // Guardar archivo
+        await fs.writeFile(path, JSON.stringify(usuarios, null, 2));
+
+        console.log("Usuarios guardados:", usuarios);
+
+        res.send("Usuario registrado correctamente");
+
+    } catch (error) {
+        console.error(error);
+        res.send("Error al registrar usuario");
+    }
 };
