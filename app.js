@@ -2,6 +2,7 @@ import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
+import session from "express-session";
 
 dotenv.config();
 
@@ -22,6 +23,12 @@ app.use(express.json());
 
 // Archivos estáticos
 app.use(express.static(path.join(__dirname, "public")));
+
+app.use(session({
+    secret: "secreto123",
+    resave: false,
+    saveUninitialized: false
+}));
 
 // Ruta de prueba
 import indexRoutes from "./routes/index.js";

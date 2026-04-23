@@ -65,10 +65,18 @@ export const loginUser = async (req, res) => {
             return res.send("Contraseña incorrecta");
         }
 
+        req.session.usuario = usuario;
+
         res.send(`Bienvenido ${usuario.username}`);
 
     } catch (error) {
         console.error(error);
         res.send("Error en login");
     }
+};
+
+export const logout = (req, res) => {
+    req.session.destroy(() => {
+        res.send("Sesión cerrada");
+    });
 };

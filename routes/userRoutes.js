@@ -3,7 +3,8 @@ import {
     showRegister, 
     registerUser, 
     showLogin, 
-    loginUser 
+    loginUser,
+    logout 
 } from "../controllers/userController.js";
 
 const router = express.Router();
@@ -15,5 +16,6 @@ router.post("/registro", registerUser);
 // Login
 router.get("/login", showLogin);
 router.post("/login", loginUser);
+router.get("/logout", logout);
 
 export default router;
