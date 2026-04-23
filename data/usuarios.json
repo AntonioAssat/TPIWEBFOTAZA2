@@ -3,12 +3,12 @@
     "id": 1,
     "username": "Antonio",
     "email": "turcotomas280302@gmail.com",
-    "password": "1234"
+    "password": "$2b$10$O7VNIxjR6gS09mnmmGclae7efy/yIpa5VFrQv7E73GqdwsbOpMjBC"
   },
   {
     "id": 2,
-    "username": "josemirzaleh",
-    "email": "josemir@gmail.com",
-    "password": "12345"
+    "username": "josemir",
+    "email": "josemirzaleh@gmail.com",
+    "password": "$2b$10$YqPdxSqgZyPTJUnIvOkL1eIIWy9TIXU1ya8XnwaHUjq78/9xFvJxa"
   }
 ]

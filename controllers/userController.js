@@ -1,4 +1,6 @@
 import fs from "fs/promises";
+//import contraseña segura
+import bcrypt from "bcrypt";
 
 const path = "./data/usuarios.json";
 
@@ -18,18 +20,20 @@ export const registerUser = async (req, res) => {
         const data = await fs.readFile(path, "utf-8");
         const usuarios = JSON.parse(data);
 
-        // 🔒 Validar si ya existe el email
+        //  Validar si ya existe el email
         const existe = usuarios.find(u => u.email === email);
         if (existe) {
             return res.send("El usuario ya existe");
         }
 
         // Crear usuario nuevo
+        const hashedPassword = await bcrypt.hash(password, 10);
+
         const nuevoUsuario = {
-            id: usuarios.length + 1,
-            username,
-            email,
-            password
+        id: usuarios.length + 1,
+        username,
+        email,
+        password: hashedPassword
         };
 
         // Agregar al array
@@ -61,7 +65,9 @@ export const loginUser = async (req, res) => {
             return res.send("Usuario no encontrado");
         }
 
-        if (usuario.password !== password) {
+        const coincide = await bcrypt.compare(password, usuario.password);
+
+        if (!coincide) {
             return res.send("Contraseña incorrecta");
         }
 
