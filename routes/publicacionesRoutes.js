@@ -5,7 +5,8 @@ import {
     showPosts,
     showAddImage, 
     addImage,
-    addComment
+    addComment,
+    addRating
 } from "../controllers/publicacionesController.js";
 import { isAuthenticated } from "../middlewares/auth.js";
 
@@ -23,4 +24,7 @@ router.post("/publicaciones/:id/imagen", isAuthenticated, addImage);
 
 //comentarios
 router.post("/imagenes/:id/comentario", isAuthenticated, addComment);
+
+//valoaciones
+router.post("/imagenes/:id/valorar", isAuthenticated, addRating);
 export default router;

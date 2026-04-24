@@ -5,19 +5,29 @@ html
   body
     h1 Publicaciones
 
+    // ======================
+    // BUSCADOR
+    // ======================
+    form(action="/publicaciones" method="GET")
+      input(type="text" name="search" placeholder="Buscar publicaciones...")
+      button(type="submit") Buscar
+
+    // ======================
+    // LISTADO
+    // ======================
     each pub in publicaciones
       div(style="border:1px solid black; margin:10px; padding:10px;")
         h2= pub.titulo
         p= pub.descripcion
 
-        if pub.imagenes.length > 0
+        if pub.imagenes && pub.imagenes.length > 0
           each img in pub.imagenes
             div(style="margin-top:10px; padding:10px; border:1px dashed gray;")
 
               // Imagen
               img(src=img.url width="200")
 
-              // Datos de la imagen
+              // Datos
               p Licencia: #{img.licencia}
 
               if img.watermark
@@ -26,22 +36,36 @@ html
               // ======================
               // COMENTARIOS
               // ======================
-
               h4 Comentarios
 
-              if img.comentarios.length > 0
+              if img.comentarios && img.comentarios.length > 0
                 each c in img.comentarios
                   p #{c.texto} (Usuario #{c.usuario_id})
               else
                 p Sin comentarios
 
-              // ======================
-              // FORMULARIO COMENTAR
-              // ======================
-
               form(action=`/imagenes/${img.id}/comentario` method="POST")
                 input(type="text" name="texto" placeholder="Escribí un comentario" required)
                 button(type="submit") Comentar
+
+              // ======================
+              // VALORACIONES
+              // ======================
+              h4 Valoración
+
+              if img.valoraciones && img.valoraciones.length > 0
+                p Promedio: #{img.promedio} ⭐ (#{img.valoraciones.length} votos)
+              else
+                p Sin valoraciones
+
+              form(action=`/imagenes/${img.id}/valorar` method="POST")
+                select(name="valor")
+                  option(value="1") 1
+                  option(value="2") 2
+                  option(value="3") 3
+                  option(value="4") 4
+                  option(value="5") 5
+                button(type="submit") Valorar
 
         else
           p No hay imágenes

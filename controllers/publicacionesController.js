@@ -45,18 +45,30 @@ export const showPosts = async (req, res) => {
 
         const dataCom = await fs.readFile(pathComentarios, "utf-8");
         const comentarios = JSON.parse(dataCom);
+
+        const dataVal = await fs.readFile(pathValoraciones, "utf-8");
+        const valoraciones = JSON.parse(dataVal);
+
         // Unir imágenes con publicaciones
         const publicacionesConImagenes = publicaciones.map(pub => {
     const imgs = imagenes.filter(img => img.publicacion_id === pub.id);
 
     const imgsConComentarios = imgs.map(img => {
-        const coms = comentarios.filter(c => c.imagen_id === img.id);
+    const coms = comentarios.filter(c => c.imagen_id === img.id);
 
-        return {
-            ...img,
-            comentarios: coms
-        };
-    });
+    const vals = valoraciones.filter(v => v.imagen_id === img.id);
+
+    const promedio = vals.length > 0
+        ? (vals.reduce((acc, v) => acc + v.valor, 0) / vals.length).toFixed(1)
+        : 0;
+
+    return {
+        ...img,
+        comentarios: coms,
+        valoraciones: vals,
+        promedio
+    };
+});
 
     return {
         ...pub,
@@ -136,5 +148,45 @@ export const addComment = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.send("Error al agregar comentario");
+    }
+};
+
+//valoraciones
+const pathValoraciones = "./data/valoraciones.json";
+
+export const addRating = async (req, res) => {
+    const { valor } = req.body;
+    const imagenId = req.params.id;
+    const usuarioId = req.session.usuario.id;
+
+    try {
+        const data = await fs.readFile(pathValoraciones, "utf-8");
+        const valoraciones = JSON.parse(data);
+
+        // 🔒 evitar duplicados
+        const yaValoro = valoraciones.find(v => 
+            v.usuario_id === usuarioId && v.imagen_id === parseInt(imagenId)
+        );
+
+        if (yaValoro) {
+            return res.send("Ya valoraste esta imagen");
+        }
+
+        const nuevaValoracion = {
+            id: valoraciones.length + 1,
+            valor: parseInt(valor),
+            usuario_id: usuarioId,
+            imagen_id: parseInt(imagenId)
+        };
+
+        valoraciones.push(nuevaValoracion);
+
+        await fs.writeFile(pathValoraciones, JSON.stringify(valoraciones, null, 2));
+
+        res.redirect("/publicaciones");
+
+    } catch (error) {
+        console.error(error);
+        res.send("Error al valorar");
     }
 };
