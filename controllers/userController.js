@@ -1,3 +1,5 @@
+//parte de base de datos
+import db from "../config/db.js";
 import fs from "fs/promises";
 //import contraseña segura
 import bcrypt from "bcrypt";
@@ -5,7 +7,10 @@ import bcrypt from "bcrypt";
 const path = "./data/usuarios.json";
 
 // Mostrar formulario
-export const showRegister = (req, res) => {
+export const showRegister = async (req, res) => {
+    const [rows] = await db.query("SELECT 1");
+    console.log("CONEXION OK:", rows);
+
     res.render("pages/register");
 };
 export const showLogin = (req, res) => {
