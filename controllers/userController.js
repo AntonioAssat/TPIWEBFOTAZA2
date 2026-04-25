@@ -21,35 +21,25 @@ export const registerUser = async (req, res) => {
     const { username, email, password } = req.body;
 
     try {
-        // Leer archivo
-        const data = await fs.readFile(path, "utf-8");
-        const usuarios = JSON.parse(data);
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-        //  Validar si ya existe el email
-        const existe = usuarios.find(u => u.email === email);
-        if (existe) {
+        // Verificar si ya existe
+        const [existing] = await db.query(
+            "SELECT * FROM usuarios WHERE email = ?",
+            [email]
+        );
+
+        if (existing.length > 0) {
             return res.send("El usuario ya existe");
         }
 
-        // Crear usuario nuevo
-        const hashedPassword = await bcrypt.hash(password, 10);
+        // Insertar usuario
+        await db.query(
+            "INSERT INTO usuarios (username, email, password) VALUES (?, ?, ?)",
+            [username, email, hashedPassword]
+        );
 
-        const nuevoUsuario = {
-        id: usuarios.length + 1,
-        username,
-        email,
-        password: hashedPassword
-        };
-
-        // Agregar al array
-        usuarios.push(nuevoUsuario);
-
-        // Guardar archivo
-        await fs.writeFile(path, JSON.stringify(usuarios, null, 2));
-
-        console.log("Usuarios guardados:", usuarios);
-
-        res.send("Usuario registrado correctamente");
+        res.send("Usuario registrado en MySQL");
 
     } catch (error) {
         console.error(error);
