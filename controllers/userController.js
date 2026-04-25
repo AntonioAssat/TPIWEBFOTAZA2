@@ -51,21 +51,26 @@ export const loginUser = async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        const data = await fs.readFile(path, "utf-8");
-        const usuarios = JSON.parse(data);
+        // Buscar usuario en MySQL
+        const [rows] = await db.query(
+            "SELECT * FROM usuarios WHERE email = ?",
+            [email]
+        );
 
-        const usuario = usuarios.find(u => u.email === email);
-
-        if (!usuario) {
+        if (rows.length === 0) {
             return res.send("Usuario no encontrado");
         }
 
+        const usuario = rows[0];
+
+        // Comparar contraseña con bcrypt
         const coincide = await bcrypt.compare(password, usuario.password);
 
         if (!coincide) {
             return res.send("Contraseña incorrecta");
         }
 
+        // Guardar en sesión
         req.session.usuario = usuario;
 
         res.send(`Bienvenido ${usuario.username}`);
