@@ -39,10 +39,20 @@ export const showPosts = async (req, res) => {
             params.push(`%${search}%`);
         }
 
-        // Traer publicaciones
         const [publicaciones] = await db.query(query, params);
 
-        res.render("pages/posts", { publicaciones });
+        const [imagenes] = await db.query("SELECT * FROM imagenes");
+
+        const publicacionesConImagenes = publicaciones.map(pub => {
+            const imgs = imagenes.filter(img => img.publicacion_id === pub.id);
+
+            return {
+                ...pub,
+                imagenes: imgs
+            };
+        });
+
+        res.render("pages/posts", { publicaciones: publicacionesConImagenes });
 
     } catch (error) {
         console.error(error);
@@ -64,26 +74,16 @@ export const addImage = async (req, res) => {
     const publicacionId = req.params.id;
 
     try {
-        const data = await fs.readFile(pathImagenes, "utf-8");
-        const imagenes = JSON.parse(data);
+        await db.query(
+            "INSERT INTO imagenes (url, licencia, watermark, publicacion_id) VALUES (?, ?, ?, ?)",
+            [url, licencia, watermark || null, publicacionId]
+        );
 
-        const nuevaImagen = {
-            id: imagenes.length + 1,
-            url,
-            licencia,
-            watermark: watermark || null,
-            publicacion_id: parseInt(publicacionId)
-        };
-
-        imagenes.push(nuevaImagen);
-
-        await fs.writeFile(pathImagenes, JSON.stringify(imagenes, null, 2));
-
-        res.send("Imagen agregada");
+        res.send("Imagen guardada en MySQL");
 
     } catch (error) {
         console.error(error);
-        res.send("Error al agregar imagen");
+        res.send("Error al guardar imagen");
     }
 };
 //comentarios
