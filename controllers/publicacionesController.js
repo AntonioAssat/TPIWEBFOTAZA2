@@ -29,46 +29,20 @@ export const createPost = async (req, res) => {
 
 export const showPosts = async (req, res) => {
     try {
-        const dataPub = await fs.readFile(path, "utf-8");
-        const publicaciones = JSON.parse(dataPub);
+        const { search } = req.query;
 
-        const dataImg = await fs.readFile(pathImagenes, "utf-8");
-        const imagenes = JSON.parse(dataImg);
+        let query = "SELECT * FROM publicaciones";
+        let params = [];
 
-        const dataCom = await fs.readFile(pathComentarios, "utf-8");
-        const comentarios = JSON.parse(dataCom);
+        if (search) {
+            query += " WHERE titulo LIKE ?";
+            params.push(`%${search}%`);
+        }
 
-        const dataVal = await fs.readFile(pathValoraciones, "utf-8");
-        const valoraciones = JSON.parse(dataVal);
+        // Traer publicaciones
+        const [publicaciones] = await db.query(query, params);
 
-        // Unir imágenes con publicaciones
-        const publicacionesConImagenes = publicaciones.map(pub => {
-    const imgs = imagenes.filter(img => img.publicacion_id === pub.id);
-
-    const imgsConComentarios = imgs.map(img => {
-    const coms = comentarios.filter(c => c.imagen_id === img.id);
-
-    const vals = valoraciones.filter(v => v.imagen_id === img.id);
-
-    const promedio = vals.length > 0
-        ? (vals.reduce((acc, v) => acc + v.valor, 0) / vals.length).toFixed(1)
-        : 0;
-
-    return {
-        ...img,
-        comentarios: coms,
-        valoraciones: vals,
-        promedio
-    };
-});
-
-    return {
-        ...pub,
-        imagenes: imgsConComentarios
-    };
-});
-
-        res.render("pages/posts", { publicaciones: publicacionesConImagenes });
+        res.render("pages/posts", { publicaciones });
 
     } catch (error) {
         console.error(error);
