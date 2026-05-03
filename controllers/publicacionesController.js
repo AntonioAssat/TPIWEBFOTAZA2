@@ -1,5 +1,5 @@
 import fs from "fs/promises";
-import db from "../config/db.js";
+//import db from "../config/db.js";
 
 const path = "./data/publicaciones.json";
 
@@ -59,8 +59,7 @@ export const showPosts = async (req, res) => {
         res.send("Error al cargar publicaciones");
     }
 };
-//para las imagenes de las publicaciones
-const pathImagenes = "./data/imagenes.json";
+
 
 // Mostrar formulario
 export const showAddImage = (req, res) => {

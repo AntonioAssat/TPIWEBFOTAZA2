@@ -3,7 +3,13 @@ import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import session from "express-session";
+//temporal 
+import sequelize from "./config/database.js";
+//USO DE MODELS
+import User from "./models/User.js";
 
+await sequelize.sync();
+//
 dotenv.config();
 
 const app = express();
@@ -44,3 +50,8 @@ app.use("/", publicacionesRoutes);
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
+
+//temporal sequelize
+sequelize.authenticate()
+  .then(() => console.log("Conectado a PostgreSQL"))
+  .catch(err => console.error("Error:", err));
