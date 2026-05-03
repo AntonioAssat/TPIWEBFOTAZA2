@@ -2,6 +2,8 @@ import fs from "fs/promises";
 //import db from "../config/db.js";
 import Publicacion from "../models/Publicacion.js";
 import User from "../models/User.js";
+
+import Imagen from "../models/Imagen.js";
 const path = "./data/publicaciones.json";
 
 // Mostrar formulario
@@ -32,11 +34,16 @@ export const createPost = async (req, res) => {
 export const showPosts = async (req, res) => {
     try {
         const publicaciones = await Publicacion.findAll({
-            include: {
-                model: User,
-                attributes: ["username"] // solo lo que queremos mostrar
-            }
-        });
+    include: [
+        {
+            model: User,
+            attributes: ["username"]
+        },
+        {
+            model: Imagen
+        }
+    ]
+});
 
         res.render("pages/posts", { publicaciones });
 
@@ -58,12 +65,14 @@ export const addImage = async (req, res) => {
     const publicacionId = req.params.id;
 
     try {
-        await db.query(
-            "INSERT INTO imagenes (url, licencia, watermark, publicacion_id) VALUES (?, ?, ?, ?)",
-            [url, licencia, watermark || null, publicacionId]
-        );
+        await Imagen.create({
+            url,
+            licencia,
+            watermark,
+            publicacion_id: publicacionId
+        });
 
-        res.send("Imagen guardada en MySQL");
+        res.send("Imagen guardada con Sequelize");
 
     } catch (error) {
         console.error(error);
