@@ -1,6 +1,7 @@
 import fs from "fs/promises";
 //import db from "../config/db.js";
-
+import Publicacion from "../models/Publicacion.js";
+import User from "../models/User.js";
 const path = "./data/publicaciones.json";
 
 // Mostrar formulario
@@ -14,52 +15,36 @@ export const createPost = async (req, res) => {
     const usuarioId = req.session.usuario.id;
 
     try {
-        await db.query(
-            "INSERT INTO publicaciones (titulo, descripcion, usuario_id, fecha) VALUES (?, ?, ?, NOW())",
-            [titulo, descripcion, usuarioId]
-        );
+        await Publicacion.create({
+            titulo,
+            descripcion,
+            usuario_id: usuarioId
+        });
 
-        res.send("Publicación guardada en MySQL");
+        res.send("Publicación creada con Sequelize");
 
     } catch (error) {
         console.error(error);
         res.send("Error al crear publicación");
     }
 };
-
+//mostrar las publicaciones mas usuario
 export const showPosts = async (req, res) => {
     try {
-        const { search } = req.query;
-
-        let query = "SELECT * FROM publicaciones";
-        let params = [];
-
-        if (search) {
-            query += " WHERE titulo LIKE ?";
-            params.push(`%${search}%`);
-        }
-
-        const [publicaciones] = await db.query(query, params);
-
-        const [imagenes] = await db.query("SELECT * FROM imagenes");
-
-        const publicacionesConImagenes = publicaciones.map(pub => {
-            const imgs = imagenes.filter(img => img.publicacion_id === pub.id);
-
-            return {
-                ...pub,
-                imagenes: imgs
-            };
+        const publicaciones = await Publicacion.findAll({
+            include: {
+                model: User,
+                attributes: ["username"] // solo lo que queremos mostrar
+            }
         });
 
-        res.render("pages/posts", { publicaciones: publicacionesConImagenes });
+        res.render("pages/posts", { publicaciones });
 
     } catch (error) {
         console.error(error);
         res.send("Error al cargar publicaciones");
     }
 };
-
 
 // Mostrar formulario
 export const showAddImage = (req, res) => {
