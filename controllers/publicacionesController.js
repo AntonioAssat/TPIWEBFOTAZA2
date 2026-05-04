@@ -3,7 +3,7 @@ import fs from "fs/promises";
 import Publicacion from "../models/Publicacion.js";
 import User from "../models/User.js";
 import Comentario from "../models/Comentario.js";
-
+import Valoracion from "../models/Valoracion.js";
 
 import Imagen from "../models/Imagen.js";
 const path = "./data/publicaciones.json";
@@ -46,17 +46,26 @@ export const showPosts = async (req, res) => {
             include: [
                 {
                     model: Comentario,
-                    include: [
-                        {
-                            model: User,
-                            attributes: ["username"]
-                        }
-                    ]
+                    include: [{ model: User }]
+                },
+                {
+                    model: Valoracion
                 }
             ]
         }
     ]
 });
+     // calculo del promedio de valoraciones para cada imagen
+        publicaciones.forEach(pub => {
+            pub.Imagens.forEach(img => {
+                if (img.Valoracions && img.Valoracions.length > 0) {
+                    const suma = img.Valoracions.reduce((acc, v) => acc + v.valor, 0);
+                    img.promedio = (suma / img.Valoracions.length).toFixed(1);
+                } else {
+                    img.promedio = 0;
+                }
+            });
+        });
 
         res.render("pages/posts", { publicaciones });
 
@@ -95,7 +104,7 @@ export const addImage = async (req, res) => {
 //comentarios
 const pathComentarios = "./data/comentarios.json";
 
-export const addComentario = async (req, res) => {
+export const addComment = async (req, res) => {
     const { texto } = req.body;
     const imagenId = req.params.id;
     const usuarioId = req.session.usuario.id;
@@ -124,28 +133,26 @@ export const addRating = async (req, res) => {
     const usuarioId = req.session.usuario.id;
 
     try {
-        const data = await fs.readFile(pathValoraciones, "utf-8");
-        const valoraciones = JSON.parse(data);
+        // Buscar si ya votó
+        const existente = await Valoracion.findOne({
+            where: {
+                imagen_id: imagenId,
+                usuario_id: usuarioId
+            }
+        });
 
-        // 🔒 evitar duplicados
-        const yaValoro = valoraciones.find(v => 
-            v.usuario_id === usuarioId && v.imagen_id === parseInt(imagenId)
-        );
-
-        if (yaValoro) {
-            return res.send("Ya valoraste esta imagen");
+        if (existente) {
+            // actualizar voto
+            existente.valor = valor;
+            await existente.save();
+        } else {
+            // crear voto
+            await Valoracion.create({
+                valor,
+                imagen_id: imagenId,
+                usuario_id: usuarioId
+            });
         }
-
-        const nuevaValoracion = {
-            id: valoraciones.length + 1,
-            valor: parseInt(valor),
-            usuario_id: usuarioId,
-            imagen_id: parseInt(imagenId)
-        };
-
-        valoraciones.push(nuevaValoracion);
-
-        await fs.writeFile(pathValoraciones, JSON.stringify(valoraciones, null, 2));
 
         res.redirect("/publicaciones");
 
