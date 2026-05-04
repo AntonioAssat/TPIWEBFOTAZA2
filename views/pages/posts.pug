@@ -40,9 +40,9 @@ html
               // ======================
               h4 Comentarios
 
-              if img.comentarios && img.comentarios.length > 0
-                each c in img.comentarios
-                  p #{c.texto} (Usuario #{c.usuario_id})
+              if img.Comentarios && img.Comentarios.length > 0
+                each c in img.Comentarios
+                  p #{c.texto} (#{c.User.username})
               else
                 p Sin comentarios
 

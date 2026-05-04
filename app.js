@@ -7,7 +7,7 @@ import session from "express-session";
 import sequelize from "./config/database.js";
 //USO DE MODELS
 import User from "./models/User.js";
-
+//reinicia servidor
 await sequelize.sync();
 //
 dotenv.config();

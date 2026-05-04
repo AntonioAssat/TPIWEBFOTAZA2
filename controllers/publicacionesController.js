@@ -2,6 +2,8 @@ import fs from "fs/promises";
 //import db from "../config/db.js";
 import Publicacion from "../models/Publicacion.js";
 import User from "../models/User.js";
+import Comentario from "../models/Comentario.js";
+
 
 import Imagen from "../models/Imagen.js";
 const path = "./data/publicaciones.json";
@@ -40,7 +42,18 @@ export const showPosts = async (req, res) => {
             attributes: ["username"]
         },
         {
-            model: Imagen
+            model: Imagen,
+            include: [
+                {
+                    model: Comentario,
+                    include: [
+                        {
+                            model: User,
+                            attributes: ["username"]
+                        }
+                    ]
+                }
+            ]
         }
     ]
 });
@@ -82,31 +95,23 @@ export const addImage = async (req, res) => {
 //comentarios
 const pathComentarios = "./data/comentarios.json";
 
-export const addComment = async (req, res) => {
+export const addComentario = async (req, res) => {
     const { texto } = req.body;
     const imagenId = req.params.id;
+    const usuarioId = req.session.usuario.id;
 
     try {
-        const data = await fs.readFile(pathComentarios, "utf-8");
-        const comentarios = JSON.parse(data);
-
-        const nuevoComentario = {
-            id: comentarios.length + 1,
+        await Comentario.create({
             texto,
-            usuario_id: req.session.usuario.id,
-            imagen_id: parseInt(imagenId),
-            fecha: new Date()
-        };
-
-        comentarios.push(nuevoComentario);
-
-        await fs.writeFile(pathComentarios, JSON.stringify(comentarios, null, 2));
+            imagen_id: imagenId,
+            usuario_id: usuarioId
+        });
 
         res.redirect("/publicaciones");
 
     } catch (error) {
         console.error(error);
-        res.send("Error al agregar comentario");
+        res.send("Error al comentar");
     }
 };
 
