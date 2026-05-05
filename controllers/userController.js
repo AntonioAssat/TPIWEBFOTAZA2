@@ -49,26 +49,30 @@ export const loginUser = async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        //Buscar usuario
+        // Buscar usuario
         const usuario = await User.findOne({
             where: { email }
         });
-
+        //vverificar si existe el usario
         if (!usuario) {
             return res.send("Usuario no encontrado");
         }
 
-        //Comparar contraseña
+        // Comparar la contraseña
         const coincide = await bcrypt.compare(password, usuario.password);
-
+        //si no coincide contraseña
         if (!coincide) {
             return res.send("Contraseña incorrecta");
         }
 
-        // Guardar sesión
-        req.session.usuario = usuario;
+        // Guardar sesión 
+        req.session.usuario = {
+            id: usuario.id,
+            username: usuario.username
+        };
 
-        res.send(`Bienvenido ${usuario.username}`);
+        // Redirige al feed
+        res.redirect("/publicaciones");
 
     } catch (error) {
         console.error(error);

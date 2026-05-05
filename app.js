@@ -33,8 +33,24 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use(session({
     secret: "secreto123",
     resave: false,
-    saveUninitialized: false
+    saveUninitialized: false,
+    cookie: {
+        secure: false,   // 🔥 importante en localhost
+        httpOnly: true
+    }
 }));
+
+// PASAR USUARIO A TODAS LAS VISTAS
+app.use((req, res, next) => {
+    res.locals.usuario = req.session.usuario;
+    next();
+});
+//mostrar mensaje de denuncias
+app.use((req, res, next) => {
+    res.locals.mensaje = req.session.mensaje;
+    delete req.session.mensaje;
+    next();
+});
 
 // Ruta de prueba
 import indexRoutes from "./routes/index.js";

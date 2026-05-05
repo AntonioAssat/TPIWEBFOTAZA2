@@ -4,6 +4,7 @@ import Publicacion from "../models/Publicacion.js";
 import User from "../models/User.js";
 import Comentario from "../models/Comentario.js";
 import Valoracion from "../models/Valoracion.js";
+import Denuncia from "../models/Denuncia.js";
 
 import Imagen from "../models/Imagen.js";
 const path = "./data/publicaciones.json";
@@ -159,5 +160,42 @@ export const addRating = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.send("Error al valorar");
+    }
+};
+
+//denuncias
+export const addDenuncia = async (req, res) => {
+    const { motivo, descripcion } = req.body;
+    const imagenId = req.params.id;
+    const usuarioId = req.session.usuario.id;
+
+    try {
+        const existente = await Denuncia.findOne({
+            where: {
+                imagen_id: imagenId,
+                usuario_id: usuarioId
+            }
+        });
+
+        if (existente) {
+            // muestra mensaje y redirecciona
+            req.session.mensaje = "Ya denunciaste esta imagen";
+            return res.redirect("/publicaciones");
+        }
+
+        await Denuncia.create({
+            motivo,
+            descripcion,
+            imagen_id: imagenId,
+            usuario_id: usuarioId
+        });
+
+        req.session.mensaje = "Denuncia enviada correctamente";
+        res.redirect("/publicaciones");
+
+    } catch (error) {
+        console.error(error);
+        req.session.mensaje = "Error al denunciar";
+        res.redirect("/publicaciones");
     }
 };

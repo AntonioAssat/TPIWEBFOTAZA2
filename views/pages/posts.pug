@@ -5,6 +5,11 @@ html
   body
     h1 Publicaciones
 
+    // MENSAJE
+    if mensaje
+      p(style="background:lightgreen; padding:10px; border:1px solid green;")
+        = mensaje
+
     // ======================
     // BUSCADOR
     // ======================
@@ -46,9 +51,12 @@ html
               else
                 p Sin comentarios
 
-              form(action=`/imagenes/${img.id}/comentario` method="POST")
-                input(type="text" name="texto" placeholder="Escribí un comentario" required)
-                button(type="submit") Comentar
+              if usuario
+                form(action=`/imagenes/${img.id}/comentario` method="POST")
+                  input(type="text" name="texto" placeholder="Escribí un comentario" required)
+                  button(type="submit") Comentar
+              else
+                p Tenés que iniciar sesión para comentar
 
               // ======================
               // VALORACIONES
@@ -60,13 +68,33 @@ html
               else
                 p Sin valoraciones
 
-              form(action=`/imagenes/${img.id}/valorar` method="POST")
-                select(name="valor")
-                  option(value="1") 1
-                  option(value="2") 2
-                  option(value="3") 3
-                  option(value="4") 4
-                  option(value="5") 5
-                button(type="submit") Valorar
+              if usuario
+                form(action=`/imagenes/${img.id}/valorar` method="POST")
+                  select(name="valor")
+                    option(value="1") 1
+                    option(value="2") 2
+                    option(value="3") 3
+                    option(value="4") 4
+                    option(value="5") 5
+                  button(type="submit") Valorar
+              else
+                p Tenés que iniciar sesión para valorar
+
+              // ======================
+              // DENUNCIAS
+              // ======================
+              h4 Denunciar
+
+              if usuario
+                form(action=`/imagenes/${img.id}/denunciar` method="POST")
+                  select(name="motivo")
+                    option(value="Contenido inapropiado") Contenido inapropiado
+                    option(value="Derechos de autor") Derechos de autor
+                    option(value="Spam") Spam
+                  input(type="text" name="descripcion" placeholder="Explicá el motivo")
+                  button(type="submit") Denunciar
+              else
+                p Tenés que iniciar sesión para denunciar
+
         else
           p No hay imágenes
