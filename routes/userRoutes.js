@@ -4,9 +4,14 @@ import {
     registerUser, 
     showLogin, 
     loginUser,
-    logout 
+    logout,
+    showPerfil,
+    editPerfilForm,
+    updatePerfil,
+    followUser
 } from "../controllers/userController.js";
-
+import { isAuthenticated } from "../middlewares/auth.js";
+import upload from "../middlewares/upload.js";
 const router = express.Router();
 
 // Registro
@@ -17,5 +22,18 @@ router.post("/registro", registerUser);
 router.get("/login", showLogin);
 router.post("/login", loginUser);
 router.get("/logout", logout);
+//perfil
+router.get("/perfil/:id", isAuthenticated, showPerfil);
+//editar perfil
+router.get("/perfil/:id/editar", isAuthenticated, editPerfilForm);
+router.post(
+  "/perfil/:id/editar",
+  isAuthenticated,
+  upload.single("avatar"),
+  updatePerfil
+);
+//seguidores
+router.post("/perfil/:id/follow", isAuthenticated, followUser);
+
 
 export default router;

@@ -20,6 +20,18 @@ const User = sequelize.define("User", {
         type: DataTypes.STRING,
         allowNull: false,
     },
+    avatar: {
+        type: DataTypes.STRING,
+        defaultValue: "/img/default.png"
+    },
+    bio: {
+        type: DataTypes.TEXT,
+        allowNull: true
+    },
+    fechaRegistro: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW
+    }
 });
 
 export default User;

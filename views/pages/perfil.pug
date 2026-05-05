@@ -1,0 +1,32 @@
+doctype html
+html
+  head
+    title Perfil
+  body
+    h1 Perfil de #{usuario.username}
+    
+    
+    p Seguidores: #{seguidores}
+    p Siguiendo: #{siguiendo}
+
+    if usuario.avatar
+      img(src=usuario.avatar width="150")
+
+    p Email: #{usuario.email}
+
+    if usuario.bio
+      p Bio: #{usuario.bio}
+    else
+      p Sin bio
+
+    p Miembro desde: #{usuario.fechaRegistro}
+
+    if usuarioLogueado && usuarioLogueado.id == usuario.id
+     a(href=`/perfil/${usuario.id}/editar`) Editar perfil
+
+    if usuarioLogueado && usuarioLogueado.id != usuario.id
+      form(action=`/perfil/${usuario.id}/follow` method="POST")
+        if yaSigue
+          button(type="submit") Dejar de seguir
+        else
+          button(type="submit") Seguir

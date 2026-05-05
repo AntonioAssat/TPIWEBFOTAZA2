@@ -1,0 +1,39 @@
+doctype html
+html
+  head
+    title Editar Perfil
+  body
+    h1 Editar Perfil
+
+    form(action=`/perfil/${usuario.id}/editar` method="POST" enctype="multipart/form-data")
+      
+      // ======================
+      // FOTO DE PERFIL
+      // ======================
+      label Foto de perfil:
+      br
+
+      if usuario.avatar
+        img(src=usuario.avatar width="120")
+        br
+
+      input(type="file" name="avatar")
+      br
+      br
+
+      // ======================
+      // BIO
+      // ======================
+      label Bio:
+      br
+      textarea(name="bio" rows="4" cols="40")= usuario.bio
+      br
+      br
+
+      // ======================
+      // BOTÓN
+      // ======================
+      button(type="submit") Guardar cambios
+
+    br
+    a(href=`/perfil/${usuario.id}`) Volver al perfi

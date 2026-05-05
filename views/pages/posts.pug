@@ -24,7 +24,13 @@ html
       div(style="border:1px solid black; margin:10px; padding:10px;")
         
         h2= pub.titulo
-        p Autor: #{pub.User ? pub.User.username : "Sin usuario"}
+
+        // 🔥 AUTOR CON LINK AL PERFIL
+        if pub.User
+          p Autor:
+            a(href=`/perfil/${pub.User.id}`)= pub.User.username
+        else
+          p Autor: Sin usuario
 
         // ======================
         // IMÁGENES

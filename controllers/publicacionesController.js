@@ -40,7 +40,7 @@ export const showPosts = async (req, res) => {
     include: [
         {
             model: User,
-            attributes: ["username"]
+            attributes: ["id","username"]
         },
         {
             model: Imagen,

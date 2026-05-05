@@ -8,7 +8,8 @@ import sequelize from "./config/database.js";
 //USO DE MODELS
 import User from "./models/User.js";
 //reinicia servidor
-await sequelize.sync();
+//await sequelize.sync();
+await sequelize.sync({ alter: true });
 //
 dotenv.config();
 
