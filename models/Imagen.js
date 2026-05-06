@@ -16,6 +16,10 @@ const Imagen = sequelize.define("Imagen", {
     },
     watermark: {
         type: DataTypes.STRING,
+    },
+    estado: {
+    type: DataTypes.STRING,
+    defaultValue: "activa"
     }
 });
 

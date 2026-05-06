@@ -7,7 +7,8 @@ import {
     addImage,
     addComment,
     addRating,
-    addDenuncia
+    addDenuncia,
+    showFeedSeguidos
 } from "../controllers/publicacionesController.js";
 import { isAuthenticated } from "../middlewares/auth.js";
 
@@ -31,4 +32,6 @@ router.post("/imagenes/:id/valorar", isAuthenticated, addRating);
 
 //denuncias
 router.post("/imagenes/:id/denunciar", isAuthenticated, addDenuncia);
+
+router.get("/feed", isAuthenticated, showFeedSeguidos);
 export default router;

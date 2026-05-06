@@ -2,6 +2,7 @@ doctype html
 html
   head
     title Publicaciones
+    a(href="/feed") Ver publicaciones de usuarios que sigo
   body
     h1 Publicaciones
 
@@ -25,7 +26,7 @@ html
         
         h2= pub.titulo
 
-        // 🔥 AUTOR CON LINK AL PERFIL
+        // AUTOR
         if pub.User
           p Autor:
             a(href=`/perfil/${pub.User.id}`)= pub.User.username
@@ -43,64 +44,74 @@ html
 
               p Licencia: #{img.licencia}
 
+              p Estado: #{img.estado}
+
               if img.watermark
                 p Watermark: #{img.watermark}
 
               // ======================
-              // COMENTARIOS
+              // BLOQUEO POR REVISIÓN
               // ======================
-              h4 Comentarios
+              if img.estado == "en_revision"
+                p(style="color:red") ⚠ Imagen en revisión (interacciones bloqueadas)
 
-              if img.Comentarios && img.Comentarios.length > 0
-                each c in img.Comentarios
-                  p #{c.texto} (#{c.User.username})
               else
-                p Sin comentarios
 
-              if usuario
-                form(action=`/imagenes/${img.id}/comentario` method="POST")
-                  input(type="text" name="texto" placeholder="Escribí un comentario" required)
-                  button(type="submit") Comentar
-              else
-                p Tenés que iniciar sesión para comentar
+                // ======================
+                // COMENTARIOS
+                // ======================
+                h4 Comentarios
 
-              // ======================
-              // VALORACIONES
-              // ======================
-              h4 Valoración
+                if img.Comentarios && img.Comentarios.length > 0
+                  each c in img.Comentarios
+                    p #{c.texto} (#{c.User.username})
+                else
+                  p Sin comentarios
 
-              if img.Valoracions && img.Valoracions.length > 0
-                p Promedio: #{img.promedio} ⭐ (#{img.Valoracions.length} votos)
-              else
-                p Sin valoraciones
+                if usuario
+                  form(action=`/imagenes/${img.id}/comentario` method="POST")
+                    input(type="text" name="texto" placeholder="Escribí un comentario" required)
+                    button(type="submit") Comentar
+                else
+                  p Tenés que iniciar sesión para comentar
 
-              if usuario
-                form(action=`/imagenes/${img.id}/valorar` method="POST")
-                  select(name="valor")
-                    option(value="1") 1
-                    option(value="2") 2
-                    option(value="3") 3
-                    option(value="4") 4
-                    option(value="5") 5
-                  button(type="submit") Valorar
-              else
-                p Tenés que iniciar sesión para valorar
+                // ======================
+                // VALORACIONES
+                // ======================
+                h4 Valoración
 
-              // ======================
-              // DENUNCIAS
-              // ======================
-              h4 Denunciar
+                if img.Valoracions && img.Valoracions.length > 0
+                  p Promedio: #{img.promedio} ⭐ (#{img.Valoracions.length} votos)
+                else
+                  p Sin valoraciones
 
-              if usuario
-                form(action=`/imagenes/${img.id}/denunciar` method="POST")
-                  select(name="motivo")
-                    option(value="Contenido inapropiado") Contenido inapropiado
-                    option(value="Derechos de autor") Derechos de autor
-                    option(value="Spam") Spam
-                  input(type="text" name="descripcion" placeholder="Explicá el motivo")
-                  button(type="submit") Denunciar
-              else
-                p Tenés que iniciar sesión para denunciar
+                if usuario
+                  form(action=`/imagenes/${img.id}/valorar` method="POST")
+                    select(name="valor")
+                      option(value="1") 1
+                      option(value="2") 2
+                      option(value="3") 3
+                      option(value="4") 4
+                      option(value="5") 5
+                    button(type="submit") Valorar
+                else
+                  p Tenés que iniciar sesión para valorar
+
+                // ======================
+                // DENUNCIAS
+                // ======================
+                h4 Denunciar
+
+                if usuario
+                  form(action=`/imagenes/${img.id}/denunciar` method="POST")
+                    select(name="motivo")
+                      option(value="Contenido inapropiado") Contenido inapropiado
+                      option(value="Derechos de autor") Derechos de autor
+                      option(value="Spam") Spam
+                    input(type="text" name="descripcion" placeholder="Explicá el motivo")
+                    button(type="submit") Denunciar
+                else
+                  p Tenés que iniciar sesión para denunciar
 
         else
           p No hay imágenes

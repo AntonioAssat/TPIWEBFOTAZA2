@@ -5,7 +5,7 @@ import User from "../models/User.js";
 import Comentario from "../models/Comentario.js";
 import Valoracion from "../models/Valoracion.js";
 import Denuncia from "../models/Denuncia.js";
-
+import Follow from "../models/Follow.js";
 import Imagen from "../models/Imagen.js";
 const path = "./data/publicaciones.json";
 
@@ -170,6 +170,29 @@ export const addDenuncia = async (req, res) => {
     const usuarioId = req.session.usuario.id;
 
     try {
+        const imagen = await Imagen.findByPk(imagenId);
+
+        if (!imagen) {
+            req.session.mensaje = "Imagen no encontrada";
+            return res.redirect("/publicaciones");
+        }
+        if (imagen.estado === "en_revision") {
+            req.session.mensaje = "Esta imagen ya está en revisión";
+            return res.redirect("/publicaciones");
+        }
+        //  no denunciar propia imagen
+        if (imagen.usuario_id == usuarioId) {
+            req.session.mensaje = "No podés denunciar tu propia imagen";
+            return res.redirect("/publicaciones");
+        }
+
+        //  si ya está en revisión
+        if (imagen.estado === "en_revision") {
+            req.session.mensaje = "Esta imagen ya está en revisión";
+            return res.redirect("/publicaciones");
+        }
+
+        //  evitar duplicadas
         const existente = await Denuncia.findOne({
             where: {
                 imagen_id: imagenId,
@@ -178,11 +201,11 @@ export const addDenuncia = async (req, res) => {
         });
 
         if (existente) {
-            // muestra mensaje y redirecciona
             req.session.mensaje = "Ya denunciaste esta imagen";
             return res.redirect("/publicaciones");
         }
 
+        // ✔ crear denuncia
         await Denuncia.create({
             motivo,
             descripcion,
@@ -190,12 +213,82 @@ export const addDenuncia = async (req, res) => {
             usuario_id: usuarioId
         });
 
+        // ✔ contar denuncias
+        const total = await Denuncia.count({
+            where: { imagen_id: imagenId }
+        });
+
+        // ✔ cambiar estado
+        if (total >= 3) {
+            imagen.estado = "en_revision";
+        } else {
+            imagen.estado = "denunciada";
+        }
+
+        await imagen.save();
+
         req.session.mensaje = "Denuncia enviada correctamente";
+
         res.redirect("/publicaciones");
 
     } catch (error) {
         console.error(error);
-        req.session.mensaje = "Error al denunciar";
-        res.redirect("/publicaciones");
+        res.send("Error al denunciar");
+    }
+};
+
+export const showFeedSeguidos = async (req, res) => {
+    const usuarioId = req.session.usuario.id;
+
+    try {
+        // 🔥 obtener a quién sigo
+        const follows = await Follow.findAll({
+            where: { seguidor_id: usuarioId }
+        });
+
+        const idsSeguidos = follows.map(f => f.seguido_id);
+
+        // 🔥 traer publicaciones SOLO de esos usuarios
+        const publicaciones = await Publicacion.findAll({
+            where: {
+                usuario_id: idsSeguidos
+            },
+            include: [
+                {
+                    model: User,
+                    attributes: ["id", "username"]
+                },
+                {
+                    model: Imagen,
+                    include: [
+                        {
+                            model: Comentario,
+                            include: [{ model: User }]
+                        },
+                        {
+                            model: Valoracion
+                        }
+                    ]
+                }
+            ]
+        });
+
+        // promedio valoraciones (igual que ya tenías)
+        publicaciones.forEach(pub => {
+            pub.Imagens.forEach(img => {
+                if (img.Valoracions && img.Valoracions.length > 0) {
+                    const suma = img.Valoracions.reduce((acc, v) => acc + v.valor, 0);
+                    img.promedio = (suma / img.Valoracions.length).toFixed(1);
+                } else {
+                    img.promedio = 0;
+                }
+            });
+        });
+
+        res.render("pages/posts", { publicaciones });
+
+    } catch (error) {
+        console.error(error);
+        res.send("Error al cargar feed");
     }
 };
