@@ -2,12 +2,31 @@ doctype html
 html
   head
     title Publicaciones
-    a(href="/feed") Ver publicaciones de usuarios que sigo
-    a(href="/notificaciones") Ver notificaciones
+
   body
+
+    // ======================
+    // NAVBAR
+    // ======================
+    div(style="margin-bottom:20px;")
+
+      a(href="/publicaciones") Inicio
+      |  | 
+
+      a(href="/feed") Publicaciones de usuarios que sigo
+      |  | 
+
+      a(href="/notificaciones") Notificaciones
+      |  | 
+
+      if usuario
+        a(href=`/perfil/${usuario.id}`) Mi perfil
+
     h1 Publicaciones
 
+    // ======================
     // MENSAJE
+    // ======================
     if mensaje
       p(style="background:lightgreen; padding:10px; border:1px solid green;")
         = mensaje
@@ -16,33 +35,78 @@ html
     // BUSCADOR
     // ======================
     form(action="/publicaciones" method="GET")
-      input(type="text" name="search" placeholder="Buscar publicaciones...")
+
+      input(
+        type="text"
+        name="search"
+        placeholder="Buscar publicaciones o tags..."
+      )
+
       button(type="submit") Buscar
+
+    br
 
     // ======================
     // LISTADO
     // ======================
     each pub in publicaciones
+
       div(style="border:1px solid black; margin:10px; padding:10px;")
-        
+
+        // ======================
+        // TÍTULO
+        // ======================
         h2= pub.titulo
 
+        // ======================
+        // TAGS
+        // ======================
+        if pub.Tags && pub.Tags.length > 0
+
+          p
+            | Tags:
+
+            each tag in pub.Tags
+
+              span(
+                style="margin-right:8px; color:blue; font-weight:bold;"
+              )
+                | ##{tag.nombre}
+
+        // ======================
         // AUTOR
+        // ======================
         if pub.User
-          p Autor:
-            a(href=`/perfil/${pub.User.id}`)= pub.User.username
+
+          p
+            | Autor: 
+
+            a(href=`/perfil/${pub.User.id}`)
+              = pub.User.username
+
         else
+
           p Autor: Sin usuario
 
         // ======================
         // IMÁGENES
         // ======================
         if pub.Imagens && pub.Imagens.length > 0
+
           each img in pub.Imagens
-            div(style="margin-top:10px; padding:10px; border:1px dashed gray;")
-              
+
+            div(
+              style="margin-top:10px; padding:10px; border:1px dashed gray;"
+            )
+
+              // ======================
+              // IMAGEN
+              // ======================
               img(src=img.url width="200")
 
+              // ======================
+              // DATOS
+              // ======================
               p Licencia: #{img.licencia}
 
               p Estado: #{img.estado}
@@ -51,10 +115,12 @@ html
                 p Watermark: #{img.watermark}
 
               // ======================
-              // BLOQUEO POR REVISIÓN
+              // BLOQUEO
               // ======================
               if img.estado == "en_revision"
-                p(style="color:red") ⚠ Imagen en revisión (interacciones bloqueadas)
+
+                p(style="color:red")
+                  | ⚠ Imagen en revisión (interacciones bloqueadas)
 
               else
 
@@ -64,16 +130,36 @@ html
                 h4 Comentarios
 
                 if img.Comentarios && img.Comentarios.length > 0
+
                   each c in img.Comentarios
-                    p #{c.texto} (#{c.User.username})
+
+                    p
+                      | #{c.texto} (
+                      = c.User.username
+                      | )
+
                 else
+
                   p Sin comentarios
 
                 if usuario
-                  form(action=`/imagenes/${img.id}/comentario` method="POST")
-                    input(type="text" name="texto" placeholder="Escribí un comentario" required)
+
+                  form(
+                    action=`/imagenes/${img.id}/comentario`
+                    method="POST"
+                  )
+
+                    input(
+                      type="text"
+                      name="texto"
+                      placeholder="Escribí un comentario"
+                      required
+                    )
+
                     button(type="submit") Comentar
+
                 else
+
                   p Tenés que iniciar sesión para comentar
 
                 // ======================
@@ -82,20 +168,35 @@ html
                 h4 Valoración
 
                 if img.Valoracions && img.Valoracions.length > 0
-                  p Promedio: #{img.promedio} ⭐ (#{img.Valoracions.length} votos)
+
+                  p
+                    | Promedio: #{img.promedio} ⭐ (
+                    = img.Valoracions.length
+                    |  votos)
+
                 else
+
                   p Sin valoraciones
 
                 if usuario
-                  form(action=`/imagenes/${img.id}/valorar` method="POST")
+
+                  form(
+                    action=`/imagenes/${img.id}/valorar`
+                    method="POST"
+                  )
+
                     select(name="valor")
+
                       option(value="1") 1
                       option(value="2") 2
                       option(value="3") 3
                       option(value="4") 4
                       option(value="5") 5
+
                     button(type="submit") Valorar
+
                 else
+
                   p Tenés que iniciar sesión para valorar
 
                 // ======================
@@ -104,15 +205,35 @@ html
                 h4 Denunciar
 
                 if usuario
-                  form(action=`/imagenes/${img.id}/denunciar` method="POST")
+
+                  form(
+                    action=`/imagenes/${img.id}/denunciar`
+                    method="POST"
+                  )
+
                     select(name="motivo")
-                      option(value="Contenido inapropiado") Contenido inapropiado
-                      option(value="Derechos de autor") Derechos de autor
-                      option(value="Spam") Spam
-                    input(type="text" name="descripcion" placeholder="Explicá el motivo")
+
+                      option(value="Contenido inapropiado")
+                        | Contenido inapropiado
+
+                      option(value="Derechos de autor")
+                        | Derechos de autor
+
+                      option(value="Spam")
+                        | Spam
+
+                    input(
+                      type="text"
+                      name="descripcion"
+                      placeholder="Explicá el motivo"
+                    )
+
                     button(type="submit") Denunciar
+
                 else
+
                   p Tenés que iniciar sesión para denunciar
 
         else
+
           p No hay imágenes

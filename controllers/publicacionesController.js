@@ -8,6 +8,8 @@ import Denuncia from "../models/Denuncia.js";
 import Follow from "../models/Follow.js";
 import Imagen from "../models/Imagen.js";
 import Notificacion from "../models/Notificacion.js";
+import Tag from "../models/Tag.js";
+import { Op } from "sequelize";
 const path = "./data/publicaciones.json";
 
 // Mostrar formulario
@@ -17,62 +19,157 @@ export const showCreatePost = (req, res) => {
 
 // Crear publicación
 export const createPost = async (req, res) => {
-    const { titulo, descripcion } = req.body;
+
+    const { titulo, descripcion, tags } = req.body;
+
     const usuarioId = req.session.usuario.id;
 
     try {
-        await Publicacion.create({
+        // CREAR PUBLICACIÓN
+      
+        const publicacion = await Publicacion.create({
+
             titulo,
             descripcion,
             usuario_id: usuarioId
+
         });
+        // TAGS
+        
+        if (tags) {
+
+            const listaTags = tags.split(",");
+
+            for (let nombreTag of listaTags) {
+
+                nombreTag = nombreTag.trim().toLowerCase();
+
+                let tag = await Tag.findOne({
+                    where: {
+                        nombre: nombreTag
+                    }
+                });
+
+                // crear si no existe
+                if (!tag) {
+
+                    tag = await Tag.create({
+                        nombre: nombreTag
+                    });
+                }
+
+                // relacionar tag con publicación
+                await publicacion.addTag(tag);
+            }
+        }
 
         res.send("Publicación creada con Sequelize");
 
     } catch (error) {
+
         console.error(error);
+
         res.send("Error al crear publicación");
     }
 };
 //mostrar las publicaciones mas usuario
 export const showPosts = async (req, res) => {
+
     try {
+
+        // ======================
+        // BUSCADOR
+        // ======================
+        const search = req.query.search || "";
+
         const publicaciones = await Publicacion.findAll({
-    include: [
-        {
-            model: User,
-            attributes: ["id","username"]
-        },
-        {
-            model: Imagen,
+
+            where: {
+                titulo: {
+                    [Op.iLike]: `%${search}%`
+                }
+            },
+
             include: [
+
+                // ======================
+                // USUARIO
+                // ======================
                 {
-                    model: Comentario,
-                    include: [{ model: User }]
+                    model: User,
+                    attributes: ["id", "username"]
                 },
+
+                // ======================
+                // IMÁGENES
+                // ======================
                 {
-                    model: Valoracion
+                    model: Imagen,
+
+                    include: [
+                        {
+                            model: Comentario,
+                            include: [{ model: User }]
+                        },
+
+                        {
+                            model: Valoracion
+                        }
+                    ]
+                },
+
+                // ======================
+                // TAGS
+                // ======================
+                {
+                    model: Tag,
+
+                    where: search
+                        ? {
+                              nombre: {
+                                  [Op.iLike]: `%${search}%`
+                              }
+                          }
+                        : undefined,
+
+                    required: false
                 }
             ]
-        }
-    ]
-});
-     // calculo del promedio de valoraciones para cada imagen
+        });
+
+        // ======================
+        // PROMEDIO VALORACIONES
+        // ======================
         publicaciones.forEach(pub => {
+
             pub.Imagens.forEach(img => {
+
                 if (img.Valoracions && img.Valoracions.length > 0) {
-                    const suma = img.Valoracions.reduce((acc, v) => acc + v.valor, 0);
-                    img.promedio = (suma / img.Valoracions.length).toFixed(1);
+
+                    const suma = img.Valoracions.reduce(
+                        (acc, v) => acc + v.valor,
+                        0
+                    );
+
+                    img.promedio = (
+                        suma / img.Valoracions.length
+                    ).toFixed(1);
+
                 } else {
+
                     img.promedio = 0;
                 }
             });
         });
 
-        res.render("pages/posts", { publicaciones });
+        res.render("pages/posts", {
+            publicaciones
+        });
 
     } catch (error) {
+
         console.error(error);
+
         res.send("Error al cargar publicaciones");
     }
 };
