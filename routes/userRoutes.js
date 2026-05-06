@@ -8,7 +8,8 @@ import {
     showPerfil,
     editPerfilForm,
     updatePerfil,
-    followUser
+    followUser,
+    showNotifications
 } from "../controllers/userController.js";
 import { isAuthenticated } from "../middlewares/auth.js";
 import upload from "../middlewares/upload.js";
@@ -34,6 +35,7 @@ router.post(
 );
 //seguidores
 router.post("/perfil/:id/follow", isAuthenticated, followUser);
-
+//notificaciones
+router.get("/notificaciones", isAuthenticated, showNotifications);
 
 export default router;

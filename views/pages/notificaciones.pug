@@ -1,0 +1,23 @@
+doctype html
+html
+  head
+    title Notificaciones
+
+  body
+    h1 Notificaciones
+
+    if notificaciones.length > 0
+
+      each n in notificaciones
+        div(style="border:1px solid gray; margin:10px; padding:10px;")
+
+          p
+            a(href=`/perfil/${n.UsuarioAccion.id}`)= n.UsuarioAccion.username
+            |  #{n.mensaje}
+
+          p Tipo: #{n.tipo}
+
+          p Fecha: #{n.fechaFormateada}
+
+    else
+      p No tenés notificaciones

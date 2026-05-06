@@ -7,6 +7,7 @@ import Valoracion from "../models/Valoracion.js";
 import Denuncia from "../models/Denuncia.js";
 import Follow from "../models/Follow.js";
 import Imagen from "../models/Imagen.js";
+import Notificacion from "../models/Notificacion.js";
 const path = "./data/publicaciones.json";
 
 // Mostrar formulario
@@ -116,6 +117,23 @@ export const addComment = async (req, res) => {
             imagen_id: imagenId,
             usuario_id: usuarioId
         });
+        //notificacion
+        // buscar imagen
+        const imagen = await Imagen.findByPk(imagenId);
+
+        // buscar publicación
+        const publicacion = await Publicacion.findByPk(imagen.publicacion_id);
+
+        // evitar notificarse a sí mismo
+        if (publicacion.usuario_id != usuarioId) {
+
+            await Notificacion.create({
+                tipo: "comentario",
+                mensaje: "comentó tu publicación",
+                usuario_id: publicacion.usuario_id,
+                usuario_accion_id: usuarioId
+            });
+        }
 
         res.redirect("/publicaciones");
 
@@ -152,6 +170,20 @@ export const addRating = async (req, res) => {
                 valor,
                 imagen_id: imagenId,
                 usuario_id: usuarioId
+            });
+        }
+        //enviar notificacion
+        const imagen = await Imagen.findByPk(imagenId);
+
+        const publicacion = await Publicacion.findByPk(imagen.publicacion_id);
+
+        if (publicacion.usuario_id != usuarioId) {
+
+            await Notificacion.create({
+                tipo: "valoracion",
+                mensaje: "valoró tu imagen",
+                usuario_id: publicacion.usuario_id,
+                usuario_accion_id: usuarioId
             });
         }
 

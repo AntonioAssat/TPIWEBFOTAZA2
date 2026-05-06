@@ -4,6 +4,7 @@ import fs from "fs/promises";
 import bcrypt from "bcrypt";
 import User from "../models/User.js";
 import Follow from "../models/Follow.js";
+import Notificacion from "../models/Notificacion.js";
 
 const path = "./data/usuarios.json";
 
@@ -192,11 +193,65 @@ export const followUser = async (req, res) => {
                 seguidor_id: seguidorId
             });
         }
+        await Notificacion.create({
+            tipo: "follow",
+            mensaje: "comenzó a seguirte",
+            usuario_id: seguidoId,
+            usuario_accion_id: seguidorId
+        });
 
         res.redirect(`/perfil/${seguidoId}`);
 
     } catch (error) {
         console.error(error);
         res.send("Error en follow");
+    }
+};
+
+//mostrar notificaciones
+export const showNotifications = async (req, res) => {
+
+    const usuarioId = req.session.usuario.id;
+
+    try {
+
+        const notificaciones = await Notificacion.findAll({
+
+            where: {
+                usuario_id: usuarioId
+            },
+
+            include: [
+                {
+                    model: User,
+                    as: "UsuarioAccion",
+                    attributes: ["id", "username"]
+                }
+            ],
+
+            order: [["createdAt", "DESC"]]
+        });
+        // FORMATEAR FECHAS
+        
+        notificaciones.forEach(n => {
+
+            n.fechaFormateada = new Date(n.createdAt)
+                .toLocaleString("es-AR", {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit"
+                });
+
+        });
+
+        res.render("pages/notificaciones", {
+            notificaciones
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.send("Error al cargar notificaciones");
     }
 };
