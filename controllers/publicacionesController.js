@@ -106,21 +106,33 @@ export const showPosts = async (req, res) => {
                 {
                     model: Imagen,
 
+                    // SI NO ESTÁ LOGUEADO
+                    // SOLO VE IMÁGENES PÚBLICAS
+                    where: !req.session.usuario
+                        ? {
+                              licencia: {
+                                  [Op.ne]: "copyright"
+                              }
+                          }
+                        : undefined,
+
+                    required: false,
+
                     include: [
+
+                        // COMENTARIOS
                         {
                             model: Comentario,
                             include: [{ model: User }]
                         },
 
+                        // VALORACIONES
                         {
                             model: Valoracion
                         }
                     ]
                 },
-
-                // ======================
                 // TAGS
-                // ======================
                 {
                     model: Tag,
 
@@ -137,9 +149,7 @@ export const showPosts = async (req, res) => {
             ]
         });
 
-        // ======================
         // PROMEDIO VALORACIONES
-        // ======================
         publicaciones.forEach(pub => {
 
             pub.Imagens.forEach(img => {
