@@ -5,6 +5,9 @@ import bcrypt from "bcrypt";
 import User from "../models/User.js";
 import Follow from "../models/Follow.js";
 import Notificacion from "../models/Notificacion.js";
+import Publicacion from "../models/Publicacion.js";
+import Imagen from "../models/Imagen.js";
+import Tag from "../models/Tag.js";
 
 const path = "./data/usuarios.json";
 
@@ -93,7 +96,29 @@ export const showPerfil = async (req, res) => {
     const userId = req.params.id;
 
     try {
-        const usuario = await User.findByPk(userId);
+        const usuario = await User.findByPk(req.params.id, {
+
+            include: [
+                {
+                    model: Publicacion,
+
+                    include: [
+                        {
+                            model: Imagen
+                        },
+                        {
+                            model: Tag
+                        }
+                    ]
+                }
+            ]
+});
+        usuario.fechaFormateada = new Date(usuario.fechaRegistro)
+            .toLocaleString("es-AR", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit"
+    });
         const seguidores = await Follow.count({
             where: { seguido_id: userId }
         });

@@ -2,31 +2,214 @@ doctype html
 html
   head
     title Perfil
-  body
-    h1 Perfil de #{usuario.username}
-    
-    
-    p Seguidores: #{seguidores}
-    p Siguiendo: #{siguiendo}
 
-    if usuario.avatar
-      img(src=usuario.avatar width="150")
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1")
 
-    p Email: #{usuario.email}
+    link(
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    )
 
-    if usuario.bio
-      p Bio: #{usuario.bio}
-    else
-      p Sin bio
+  body(class="bg-light")
 
-    p Miembro desde: #{usuario.fechaRegistro}
+    // ======================
+    // NAVBAR
+    // ======================
+    nav.navbar.navbar-expand-lg.navbar-dark.bg-dark.mb-4
 
-    if usuarioLogueado && usuarioLogueado.id == usuario.id
-     a(href=`/perfil/${usuario.id}/editar`) Editar perfil
+      .container-fluid
 
-    if usuarioLogueado && usuarioLogueado.id != usuario.id
-      form(action=`/perfil/${usuario.id}/follow` method="POST")
-        if yaSigue
-          button(type="submit") Dejar de seguir
-        else
-          button(type="submit") Seguir
+        a.navbar-brand(href="/publicaciones")
+          | Fotaza
+
+        .navbar-nav.ms-auto
+
+          a.nav-link(href="/feed")
+            | Feed
+
+          a.nav-link(href="/notificaciones")
+            | Notificaciones
+
+          if usuarioLogueado
+            a.nav-link(href=`/perfil/${usuarioLogueado.id}`)
+              | Mi perfil
+
+    // ======================
+    // CONTENIDO
+    // ======================
+    .container
+
+      .row.justify-content-center
+
+        .col-lg-8
+
+          // ======================
+          // PERFIL
+          // ======================
+          .card.shadow-sm.mb-4
+
+            .card-body.text-center
+
+              // ======================
+              // AVATAR
+              // ======================
+              if usuario.avatar
+
+                img.rounded-circle.mb-3.shadow(
+                  src=usuario.avatar
+                  width="180"
+                  height="180"
+                  style="object-fit:cover;"
+                )
+
+              else
+
+                img.rounded-circle.mb-3.shadow(
+                  src="https://via.placeholder.com/180"
+                  width="180"
+                  height="180"
+                )
+
+              // ======================
+              // USERNAME
+              // ======================
+              h1.mb-3= usuario.username
+
+              // ======================
+              // ESTADÍSTICAS
+              // ======================
+              .row.text-center.mb-4
+
+                .col
+
+                  .card.bg-primary.text-white
+
+                    .card-body
+
+                      h3= seguidores
+
+                      p.mb-0 Seguidores
+
+                .col
+
+                  .card.bg-dark.text-white
+
+                    .card-body
+
+                      h3= siguiendo
+
+                      p.mb-0 Siguiendo
+
+              // ======================
+              // EMAIL
+              // ======================
+              p.text-muted.mb-2
+                strong Email:
+                |  #{usuario.email}
+
+              // ======================
+              // BIO
+              // ======================
+              if usuario.bio
+
+                .alert.alert-light.border
+                  p.mb-0= usuario.bio
+
+              else
+
+                p.text-muted Sin bio
+
+              // ======================
+              // FECHA
+              // ======================
+              p.text-secondary.mt-3
+                strong Miembro desde:
+                |  #{usuario.fechaFormateada}
+
+              // ======================
+              // BOTONES
+              // ======================
+              .mt-4
+
+                // EDITAR PERFIL
+                if usuarioLogueado && usuarioLogueado.id == usuario.id
+
+                  a.btn.btn-warning(
+                    href=`/perfil/${usuario.id}/editar`
+                  )
+                    | Editar perfil
+
+                // FOLLOW
+                if usuarioLogueado && usuarioLogueado.id != usuario.id
+
+                  form(
+                    action=`/perfil/${usuario.id}/follow`
+                    method="POST"
+                  )
+
+                    if yaSigue
+
+                      button.btn.btn-danger(type="submit")
+                        | Dejar de seguir
+
+                    else
+
+                      button.btn.btn-primary(type="submit")
+                        | Seguir
+
+          // ======================
+          // PUBLICACIONES
+          // ======================
+          .card.shadow-sm
+
+            .card-body
+
+              h2.mb-4 Publicaciones
+
+              if usuario.Publicacions && usuario.Publicacions.length > 0
+
+                .row
+
+                  each pub in usuario.Publicacions
+
+                    .col-md-6.mb-4
+
+                      .card.h-100.border
+
+                        .card-body
+
+                          // TÍTULO
+                          h4.card-title.mb-3= pub.titulo
+
+                          // TAGS
+                          if pub.Tags && pub.Tags.length > 0
+
+                            p
+
+                              each tag in pub.Tags
+
+                                span.badge.bg-primary.me-1
+                                  | ##{tag.nombre}
+
+                          // IMÁGENES
+                          if pub.Imagens && pub.Imagens.length > 0
+
+                            each img in pub.Imagens
+
+                              img.img-fluid.rounded.mb-3(
+                                src=img.url
+                                style="max-height:250px; object-fit:cover;"
+                              )
+
+                          else
+
+                            p.text-muted Sin imágenes
+
+              else
+
+                p.text-muted Este usuario no tiene publicaciones
+
+    script(
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    )
