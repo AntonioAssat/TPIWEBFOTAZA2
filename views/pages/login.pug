@@ -11,7 +11,10 @@ html
       rel="stylesheet"
     )
 
-  body(class="bg-light d-flex align-items-center justify-content-center" style="min-height:100vh;")
+  body(
+    class="bg-light d-flex align-items-center justify-content-center"
+    style="min-height:100vh;"
+  )
 
     .container
 
@@ -32,6 +35,16 @@ html
 
                 p.text-muted
                   | Iniciá sesión para continuar
+
+              // ======================
+              // ALERTA REGISTRO
+              // ======================
+              if registro == "ok"
+
+                .alert.alert-success
+
+                  | Usuario registrado correctamente.
+                  |  Ya podés iniciar sesión.
 
               // ======================
               // FORM LOGIN

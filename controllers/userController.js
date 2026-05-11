@@ -16,14 +16,19 @@ export const showRegister = (req, res) => {
     res.render("pages/register");
 };
 export const showLogin = (req, res) => {
-    res.render("pages/login");
+    res.render("pages/login", {
+    registro: req.query.registro
+});
 };
 // Registrar usuario
 export const registerUser = async (req, res) => {
-    const { username, email, password } = req.body;
+    const { username, email, password, confirmPassword } = req.body;
 
     try {
         //Encriptar contraseña
+        if (password !== confirmPassword) {
+       return res.send("Las contraseñas no coinciden");
+       }
         const hashedPassword = await bcrypt.hash(password, 10);
 
         //Verificar si existe usuario
@@ -42,7 +47,7 @@ export const registerUser = async (req, res) => {
             password: hashedPassword
         });
 
-        res.send("Usuario registrado con Sequelize");
+        res.redirect("/login?registro=ok");
 
     } catch (error) {
         console.error(error);
@@ -84,13 +89,20 @@ export const loginUser = async (req, res) => {
         res.send("Error en login");
     }
 };
-
+//cerrar sesion
 export const logout = (req, res) => {
-    req.session.destroy(() => {
-        res.send("Sesión cerrada");
+
+    req.session.destroy((error) => {
+
+        if (error) {
+            console.log(error);
+            return res.send("Error al cerrar sesión");
+        }
+
+        res.redirect("/login");
+
     });
 };
-
 //perfil
 export const showPerfil = async (req, res) => {
     const userId = req.params.id;

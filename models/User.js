@@ -31,7 +31,15 @@ const User = sequelize.define("User", {
     fechaRegistro: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW
-    }
+    },
+    estadoCuenta: {
+    type: DataTypes.STRING,
+    defaultValue: "activa"
+    },
+    rol: {
+    type: DataTypes.STRING,
+    defaultValue: "usuario"
+   }
 });
 
 export default User;

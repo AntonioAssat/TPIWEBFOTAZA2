@@ -22,6 +22,7 @@ router.post("/registro", registerUser);
 // Login
 router.get("/login", showLogin);
 router.post("/login", loginUser);
+//cerrar sesion
 router.get("/logout", logout);
 //perfil
 router.get("/perfil/:id", isAuthenticated, showPerfil);
@@ -33,6 +34,7 @@ router.post(
   upload.single("avatar"),
   updatePerfil
 );
+
 //seguidores
 router.post("/perfil/:id/follow", isAuthenticated, followUser);
 //notificaciones
