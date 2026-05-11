@@ -1,10 +1,11 @@
 import express from "express";
-import { home } from "../controllers/indexController.js";
+import { showHome } from "../controllers/indexController.js";
 import { isAuthenticated } from "../middlewares/auth.js";
 
 const router = express.Router();
 
-router.get("/", home);
+//router.get("/", home);
+router.get("/", showHome);
 
 //ruta protegida
 router.get("/perfil", isAuthenticated, (req, res) => {

@@ -99,7 +99,7 @@ export const logout = (req, res) => {
             return res.send("Error al cerrar sesión");
         }
 
-        res.redirect("/login");
+        res.redirect("/");
 
     });
 };
