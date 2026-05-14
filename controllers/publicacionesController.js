@@ -9,6 +9,7 @@ import Follow from "../models/Follow.js";
 import Imagen from "../models/Imagen.js";
 import Notificacion from "../models/Notificacion.js";
 import Tag from "../models/Tag.js";
+import Interes from "../models/Interes.js";
 import { Op } from "sequelize";
 const path = "./data/publicaciones.json";
 
@@ -75,10 +76,7 @@ export const createPost = async (req, res) => {
                 await publicacion.addTag(tag);
             }
         }
-
-        // ======================
         // IMÁGENES
-        // ======================
         if (req.files && req.files.length > 0) {
 
             for (const file of req.files) {
@@ -97,10 +95,8 @@ export const createPost = async (req, res) => {
                 });
             }
         }
-
-        // ======================
         // REDIRECT
-        // ======================
+
         res.redirect("/publicaciones");
 
     } catch (error) {
@@ -114,10 +110,7 @@ export const createPost = async (req, res) => {
 export const showPosts = async (req, res) => {
 
     try {
-
-        // ======================
         // BUSCADOR
-        // ======================
         const search = req.query.search || "";
 
         const publicaciones = await Publicacion.findAll({
@@ -129,18 +122,13 @@ export const showPosts = async (req, res) => {
             },
 
             include: [
-
-                // ======================
                 // USUARIO
-                // ======================
                 {
                     model: User,
                     attributes: ["id", "username"]
                 },
-
-                // ======================
                 // IMÁGENES
-                // ======================
+
                 {
                     model: Imagen,
 
@@ -390,12 +378,12 @@ export const addDenuncia = async (req, res) => {
             usuario_id: usuarioId
         });
 
-        // ✔ contar denuncias
+        // contar denuncias
         const total = await Denuncia.count({
             where: { imagen_id: imagenId }
         });
 
-        // ✔ cambiar estado
+        // cambiar estado
         if (total >= 3) {
             imagen.estado = "en_revision";
         } else {
@@ -418,14 +406,14 @@ export const showFeedSeguidos = async (req, res) => {
     const usuarioId = req.session.usuario.id;
 
     try {
-        // 🔥 obtener a quién sigo
+        // obtener a quién sigo
         const follows = await Follow.findAll({
             where: { seguidor_id: usuarioId }
         });
 
         const idsSeguidos = follows.map(f => f.seguido_id);
 
-        // 🔥 traer publicaciones SOLO de esos usuarios
+        // traer publicaciones solo de esos usuarios
         const publicaciones = await Publicacion.findAll({
             where: {
                 usuario_id: idsSeguidos
@@ -467,5 +455,78 @@ export const showFeedSeguidos = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.send("Error al cargar feed");
+    }
+};
+//marcar el interes en la imagen
+export const marcarInteres = async (req, res) => {
+
+    const imagenId = req.params.id;
+
+    const usuarioId = req.session.usuario.id;
+
+    try {
+        // BUSCAR IMAGEN
+        const imagen = await Imagen.findByPk(
+            imagenId,
+            {
+                include: [
+                    {
+                        model: Publicacion,
+                        include: [User]
+                    }
+                ]
+            }
+        );
+
+        if (!imagen) {
+
+            return res.send("Imagen no encontrada");
+        }
+        // EVITAR DUPLICADOS
+        const existe = await Interes.findOne({
+
+            where: {
+                usuario_id: usuarioId,
+                imagen_id: imagenId
+            }
+        });
+
+        if (existe) {
+
+            return res.redirect("/publicaciones");
+        }
+
+        // CREAR INTERÉS
+        await Interes.create({
+
+            usuario_id: usuarioId,
+
+            imagen_id: imagenId
+        });
+        // AUTOR
+   
+        const autorId =
+            imagen.Publicacion.usuario_id;
+
+        // NOTIFICACIÓN
+        await Notificacion.create({
+
+            tipo: "interes",
+
+            mensaje:
+                "está interesado en adquirir tu imagen",
+
+            usuario_id: autorId,
+
+            usuario_accion_id: usuarioId
+        });
+
+        res.redirect("/publicaciones");
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.send("Error al marcar interés");
     }
 };

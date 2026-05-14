@@ -325,7 +325,27 @@ html
 
                             p.text-muted
                               | Tenés que iniciar sesión para valorar
+                          
+                          // ME INTERESA
+                          h4 Me interesa
 
+                          if usuario
+
+                            form(
+                              action=`/imagenes/${img.id}/interes`
+                              method="POST"
+                              class="mb-4"
+                            )
+
+                              button.btn.btn-info(
+                                type="submit"
+                              )
+                                | ❤️ Me interesa
+                        
+                          else
+
+                             p.text-muted
+                               | Tenés que iniciar sesión para mostrar interés
                           // ======================
                           // DENUNCIAS
                           // ======================
@@ -376,23 +396,23 @@ html
                               | Tenés que iniciar sesión para denunciar
 
                 // ======================
-                // CONTROLES
+                // BOTONES ABAJO
                 // ======================
-                button.carousel-control-prev(
-                  type="button"
-                  data-bs-target=`#carousel-${pub.id}`
-                  data-bs-slide="prev"
-                )
+                .mt-3.d-flex.justify-content-center.gap-3
 
-                  span.carousel-control-prev-icon.bg-dark.rounded-circle
+                  button.btn.btn-outline-dark(
+                    type="button"
+                    data-bs-target=`#carousel-${pub.id}`
+                    data-bs-slide="prev"
+                  )
+                    | ← Anterior
 
-                button.carousel-control-next(
-                  type="button"
-                  data-bs-target=`#carousel-${pub.id}`
-                  data-bs-slide="next"
-                )
-
-                  span.carousel-control-next-icon.bg-dark.rounded-circle
+                  button.btn.btn-outline-dark(
+                    type="button"
+                    data-bs-target=`#carousel-${pub.id}`
+                    data-bs-slide="next"
+                  )
+                    | Siguiente →
 
             else
 

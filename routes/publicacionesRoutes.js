@@ -9,7 +9,8 @@ import {
     addComment,
     addRating,
     addDenuncia,
-    showFeedSeguidos
+    showFeedSeguidos,
+    marcarInteres
 } from "../controllers/publicacionesController.js";
 import { isAuthenticated } from "../middlewares/auth.js";
 
@@ -40,4 +41,10 @@ router.post("/imagenes/:id/valorar", isAuthenticated, addRating);
 router.post("/imagenes/:id/denunciar", isAuthenticated, addDenuncia);
 
 router.get("/feed", isAuthenticated, showFeedSeguidos);
+
+router.post(
+    "/imagenes/:id/interes",
+    isAuthenticated,
+    marcarInteres
+);
 export default router;
