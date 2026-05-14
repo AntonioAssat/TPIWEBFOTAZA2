@@ -7,6 +7,8 @@ import session from "express-session";
 import sequelize from "./config/database.js";
 //USO DE MODELS
 import User from "./models/User.js";
+import "./models/Conversacion.js";
+import "./models/Mensaje.js";
 //reinicia servidor
 //await sequelize.sync();
 await sequelize.sync({ alter: true });
