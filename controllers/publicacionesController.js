@@ -20,31 +20,44 @@ export const showCreatePost = (req, res) => {
 // Crear publicación
 export const createPost = async (req, res) => {
 
-    const { titulo, descripcion, tags } = req.body;
+    const {
+        titulo,
+        descripcion,
+        tags,
+        licencia,
+        watermark
+    } = req.body;
 
     const usuarioId = req.session.usuario.id;
 
     try {
+
+        // ======================
         // CREAR PUBLICACIÓN
-      
-        const publicacion = await Publicacion.create({
+        // ======================
+        const publicacion =
+            await Publicacion.create({
 
-            titulo,
-            descripcion,
-            usuario_id: usuarioId
+                titulo,
+                descripcion,
+                usuario_id: usuarioId
 
-        });
+            });
+
+        // ======================
         // TAGS
-        
+        // ======================
         if (tags) {
 
             const listaTags = tags.split(",");
 
             for (let nombreTag of listaTags) {
 
-                nombreTag = nombreTag.trim().toLowerCase();
+                nombreTag =
+                    nombreTag.trim().toLowerCase();
 
                 let tag = await Tag.findOne({
+
                     where: {
                         nombre: nombreTag
                     }
@@ -58,12 +71,37 @@ export const createPost = async (req, res) => {
                     });
                 }
 
-                // relacionar tag con publicación
+                // relacionar
                 await publicacion.addTag(tag);
             }
         }
 
-        res.send("Publicación creada con Sequelize");
+        // ======================
+        // IMÁGENES
+        // ======================
+        if (req.files && req.files.length > 0) {
+
+            for (const file of req.files) {
+
+                await Imagen.create({
+
+                    url:
+                        "/uploads/" + file.filename,
+
+                    licencia,
+
+                    watermark,
+
+                    publicacion_id:
+                        publicacion.id
+                });
+            }
+        }
+
+        // ======================
+        // REDIRECT
+        // ======================
+        res.redirect("/publicaciones");
 
     } catch (error) {
 

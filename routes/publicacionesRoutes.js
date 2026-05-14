@@ -1,4 +1,5 @@
 import express from "express";
+import upload from "../middlewares/upload.js";
 import { 
     showCreatePost, 
     createPost,
@@ -19,7 +20,12 @@ router.get("/publicaciones", showPosts);
 router.get("/publicaciones/nueva", isAuthenticated, showCreatePost);
 
 // Crear publicación
-router.post("/publicaciones", isAuthenticated, createPost);
+router.post(
+    "/publicaciones",
+    isAuthenticated,
+    upload.array("imagenes", 10),
+    createPost
+);
 
 router.get("/publicaciones/:id/imagen", isAuthenticated, showAddImage);
 router.post("/publicaciones/:id/imagen", isAuthenticated, addImage);

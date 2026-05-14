@@ -17,6 +17,7 @@ html
     // NAVBAR
     // ======================
     nav.navbar.navbar-expand-lg.navbar-dark.bg-dark.mb-4
+
       .container-fluid
 
         a.navbar-brand(href="/publicaciones")
@@ -27,6 +28,7 @@ html
           data-bs-toggle="collapse"
           data-bs-target="#navbarNav"
         )
+
           span.navbar-toggler-icon
 
         #navbarNav.collapse.navbar-collapse
@@ -34,10 +36,17 @@ html
           ul.navbar-nav.me-auto
 
             li.nav-item
+
               a.nav-link(href="/feed")
                 | Feed
 
             li.nav-item
+
+              a.nav-link(href="/publicaciones/nueva")
+                | Nueva publicación
+
+            li.nav-item
+
               a.nav-link(href="/notificaciones")
                 | Notificaciones
 
@@ -46,9 +55,12 @@ html
             ul.navbar-nav
 
               li.nav-item
+
                 a.nav-link(href=`/perfil/${usuario.id}`)
                   | Mi perfil
+
               li.nav-item
+
                 a.nav-link.text-danger(href="/logout")
                   | Cerrar sesión
 
@@ -63,13 +75,18 @@ html
       // MENSAJE
       // ======================
       if mensaje
+
         .alert.alert-success
           = mensaje
 
       // ======================
       // BUSCADOR
       // ======================
-      form(action="/publicaciones" method="GET").mb-4
+      form(
+        action="/publicaciones"
+        method="GET"
+        class="mb-4"
+      )
 
         .input-group
 
@@ -94,7 +111,8 @@ html
             // ======================
             // TÍTULO
             // ======================
-            h2.card-title.mb-3= pub.titulo
+            h2.card-title.mb-3
+              = pub.titulo
 
             // ======================
             // TAGS
@@ -114,6 +132,7 @@ html
             if pub.User
 
               p.mb-3
+
                 strong Autor:
                 |  
 
@@ -128,186 +147,266 @@ html
               p Autor: Sin usuario
 
             // ======================
-            // IMÁGENES
+            // CARRUSEL
             // ======================
             if pub.Imagens && pub.Imagens.length > 0
 
-              each img in pub.Imagens
+              .carousel.slide.mb-3(
+                id=`carousel-${pub.id}`
+                data-bs-ride="false"
+              )
 
-                .border.rounded.p-3.mb-4.bg-white
+                // ======================
+                // INDICADORES
+                // ======================
+                .carousel-indicators
 
-                  // ======================
-                  // IMAGEN
-                  // ======================
-                  img.img-fluid.rounded.mb-3(
-                    src=img.url
-                    style="max-width:300px;"
-                  )
+                  each img, index in pub.Imagens
 
-                  // ======================
-                  // DATOS
-                  // ======================
-                  p
-                    strong Licencia:
-                    |  #{img.licencia}
+                    button(
+                      type="button"
+                      data-bs-target=`#carousel-${pub.id}`
+                      data-bs-slide-to=index
+                      class=index == 0 ? "active" : ""
+                    )
 
-                  p
-                    strong Estado:
-                    |  #{img.estado}
+                // ======================
+                // ITEMS
+                // ======================
+                .carousel-inner
 
-                  if img.watermark
-                    p
-                      strong Watermark:
-                      |  #{img.watermark}
+                  each img, index in pub.Imagens
 
-                  // ======================
-                  // BLOQUEO
-                  // ======================
-                  if img.estado == "en_revision"
+                    .carousel-item(
+                      class=index == 0 ? "active" : ""
+                    )
 
-                    .alert.alert-danger
-                      | ⚠ Imagen en revisión (interacciones bloqueadas)
+                      .border.rounded.p-3.bg-white
 
-                  else
+                        // ======================
+                        // IMAGEN
+                        // ======================
+                        .text-center.mb-3
 
-                    // ======================
-                    // COMENTARIOS
-                    // ======================
-                    h4.mt-4 Comentarios
-
-                    if img.Comentarios && img.Comentarios.length > 0
-
-                      each c in img.Comentarios
-
-                        .border-bottom.pb-2.mb-2
-
-                          p.mb-1
-                            = c.texto
-
-                          small.text-muted
-                            | por 
-                            = c.User.username
-
-                    else
-
-                      p.text-muted Sin comentarios
-
-                    if usuario
-
-                      form(
-                        action=`/imagenes/${img.id}/comentario`
-                        method="POST"
-                        class="mb-4"
-                      )
-
-                        .input-group
-
-                          input.form-control(
-                            type="text"
-                            name="texto"
-                            placeholder="Escribí un comentario"
-                            required
+                          img.img-fluid.rounded(
+                            src=img.url
+                            style="max-height:500px; object-fit:cover;"
                           )
 
-                          button.btn.btn-success(type="submit")
-                            | Comentar
+                        // ======================
+                        // DATOS
+                        // ======================
+                        p
 
-                    else
+                          strong Licencia:
+                          |  #{img.licencia}
 
-                      p.text-muted
-                        | Tenés que iniciar sesión para comentar
+                        p
 
-                    // ======================
-                    // VALORACIONES
-                    // ======================
-                    h4 Valoración
+                          strong Estado:
+                          |  #{img.estado}
 
-                    if img.Valoracions && img.Valoracions.length > 0
+                        if img.watermark
 
-                      p
-                        strong Promedio:
-                        |  #{img.promedio} ⭐ (
-                        = img.Valoracions.length
-                        |  votos)
+                          p
 
-                    else
+                            strong Watermark:
+                            |  #{img.watermark}
 
-                      p.text-muted Sin valoraciones
+                        // ======================
+                        // BLOQUEO
+                        // ======================
+                        if img.estado == "en_revision"
 
-                    if usuario
+                          .alert.alert-danger
+                            | ⚠ Imagen en revisión (interacciones bloqueadas)
 
-                      form(
-                        action=`/imagenes/${img.id}/valorar`
-                        method="POST"
-                        class="mb-4"
-                      )
+                        else
 
-                        .row.g-2
+                          // ======================
+                          // COMENTARIOS
+                          // ======================
+                          h4.mt-4 Comentarios
 
-                          .col-auto
+                          if img.Comentarios && img.Comentarios.length > 0
 
-                            select.form-select(name="valor")
+                            each c in img.Comentarios
 
-                              option(value="1") 1
-                              option(value="2") 2
-                              option(value="3") 3
-                              option(value="4") 4
-                              option(value="5") 5
+                              .border-bottom.pb-2.mb-2
 
-                          .col-auto
+                                p.mb-1
+                                  = c.texto
 
-                            button.btn.btn-warning(type="submit")
-                              | Valorar
+                                small.text-muted
+                                  | por 
+                                  = c.User.username
 
-                    else
+                          else
 
-                      p.text-muted
-                        | Tenés que iniciar sesión para valorar
+                            p.text-muted
+                              | Sin comentarios
 
-                    // ======================
-                    // DENUNCIAS
-                    // ======================
-                    h4 Denunciar
+                          if usuario
 
-                    if usuario
+                            form(
+                              action=`/imagenes/${img.id}/comentario`
+                              method="POST"
+                              class="mb-4"
+                            )
 
-                      form(
-                        action=`/imagenes/${img.id}/denunciar`
-                        method="POST"
-                      )
+                              .input-group
 
-                        .mb-2
+                                input.form-control(
+                                  type="text"
+                                  name="texto"
+                                  placeholder="Escribí un comentario"
+                                  required
+                                )
 
-                          select.form-select(name="motivo")
+                                button.btn.btn-success(
+                                  type="submit"
+                                )
+                                  | Comentar
 
-                            option(value="Contenido inapropiado")
-                              | Contenido inapropiado
+                          else
 
-                            option(value="Derechos de autor")
-                              | Derechos de autor
+                            p.text-muted
+                              | Tenés que iniciar sesión para comentar
 
-                            option(value="Spam")
-                              | Spam
+                          // ======================
+                          // VALORACIONES
+                          // ======================
+                          h4 Valoración
 
-                        .mb-2
+                          if img.Valoracions && img.Valoracions.length > 0
 
-                          input.form-control(
-                            type="text"
-                            name="descripcion"
-                            placeholder="Explicá el motivo"
-                          )
+                            p
 
-                        button.btn.btn-danger(type="submit")
-                          | Denunciar
+                              strong Promedio:
+                              |  #{img.promedio} ⭐ (
+                              = img.Valoracions.length
+                              |  votos)
 
-                    else
+                          else
 
-                      p.text-muted
-                        | Tenés que iniciar sesión para denunciar
+                            p.text-muted
+                              | Sin valoraciones
+
+                          if usuario
+
+                            form(
+                              action=`/imagenes/${img.id}/valorar`
+                              method="POST"
+                              class="mb-4"
+                            )
+
+                              .row.g-2
+
+                                .col-auto
+
+                                  select.form-select(
+                                    name="valor"
+                                  )
+
+                                    option(value="1") 1
+                                    option(value="2") 2
+                                    option(value="3") 3
+                                    option(value="4") 4
+                                    option(value="5") 5
+
+                                .col-auto
+
+                                  button.btn.btn-warning(
+                                    type="submit"
+                                  )
+                                    | Valorar
+
+                          else
+
+                            p.text-muted
+                              | Tenés que iniciar sesión para valorar
+
+                          // ======================
+                          // DENUNCIAS
+                          // ======================
+                          h4 Denunciar
+
+                          if usuario
+
+                            form(
+                              action=`/imagenes/${img.id}/denunciar`
+                              method="POST"
+                            )
+
+                              .mb-2
+
+                                select.form-select(
+                                  name="motivo"
+                                )
+
+                                  option(
+                                    value="Contenido inapropiado"
+                                  )
+                                    | Contenido inapropiado
+
+                                  option(
+                                    value="Derechos de autor"
+                                  )
+                                    | Derechos de autor
+
+                                  option(value="Spam")
+                                    | Spam
+
+                              .mb-2
+
+                                input.form-control(
+                                  type="text"
+                                  name="descripcion"
+                                  placeholder="Explicá el motivo"
+                                )
+
+                              button.btn.btn-danger(
+                                type="submit"
+                              )
+                                | Denunciar
+
+                          else
+
+                            p.text-muted
+                              | Tenés que iniciar sesión para denunciar
+
+                // ======================
+                // CONTROLES
+                // ======================
+                button.carousel-control-prev(
+                  type="button"
+                  data-bs-target=`#carousel-${pub.id}`
+                  data-bs-slide="prev"
+                )
+
+                  span.carousel-control-prev-icon.bg-dark.rounded-circle
+
+                button.carousel-control-next(
+                  type="button"
+                  data-bs-target=`#carousel-${pub.id}`
+                  data-bs-slide="next"
+                )
+
+                  span.carousel-control-next-icon.bg-dark.rounded-circle
 
             else
 
-              p.text-muted No hay imágenes
+              p.text-muted
+                | No hay imágenes
+
+    // ======================
+    // BOTÓN FLOTANTE
+    // ======================
+    a.btn.btn-primary.rounded-circle.shadow-lg(
+      href="/publicaciones/nueva"
+      style="position:fixed; bottom:30px; right:30px; width:70px; height:70px; font-size:35px; display:flex; align-items:center; justify-content:center; z-index:999;"
+    )
+      | +
 
     script(
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"

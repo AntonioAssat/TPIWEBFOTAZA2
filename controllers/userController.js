@@ -159,7 +159,7 @@ export const editPerfilForm = async (req, res) => {
     const userId = req.params.id;
 
     try {
-        // 🔒 Solo puede editar su propio perfil
+        //  Solo puede editar su propio perfil
         if (req.session.usuario.id != userId) {
             return res.send("No autorizado");
         }
@@ -175,33 +175,110 @@ export const editPerfilForm = async (req, res) => {
 };
 //guardar cambios de perfil
 export const updatePerfil = async (req, res) => {
+
     const userId = req.params.id;
-    const { bio } = req.body;
+
+    const {
+        username,
+        bio,
+        fechaNacimiento,
+        password,
+        confirmPassword
+    } = req.body;
 
     try {
+
+        // ======================
+        // SEGURIDAD
+        // ======================
         if (req.session.usuario.id != userId) {
+
             return res.send("No autorizado");
         }
 
+        // ======================
+        // BUSCAR USUARIO
+        // ======================
         const usuario = await User.findByPk(userId);
 
         if (!usuario) {
+
             return res.send("Usuario no encontrado");
         }
 
-        usuario.bio = bio || usuario.bio;
+        // ======================
+        // VALIDAR USERNAME
+        // ======================
+        if (username && username !== usuario.username) {
 
-        // 🔥 SI SUBE IMAGEN
-        if (req.file) {
-            usuario.avatar = "/uploads/" + req.file.filename;
+            const existe = await User.findOne({
+                where: {
+                    username
+                }
+            });
+
+            if (existe) {
+
+                return res.send(
+                    "Ese nombre de usuario ya existe"
+                );
+            }
+
+            usuario.username = username;
         }
 
+        // ======================
+        // BIO
+        // ======================
+        usuario.bio = bio || usuario.bio;
+
+        // ======================
+        // FECHA NACIMIENTO
+        // ======================
+        usuario.fechaNacimiento =
+            fechaNacimiento || usuario.fechaNacimiento;
+
+        // ======================
+        // CAMBIAR PASSWORD
+        // ======================
+        if (password && password.trim() !== "") {
+
+            if (password !== confirmPassword) {
+
+                return res.send(
+                    "Las contraseñas no coinciden"
+                );
+            }
+
+            const hashedPassword =
+                await bcrypt.hash(password, 10);
+
+            usuario.password = hashedPassword;
+        }
+
+        // ======================
+        // AVATAR
+        // ======================
+        if (req.file) {
+
+            usuario.avatar =
+                "/uploads/" + req.file.filename;
+        }
+
+        // ======================
+        // GUARDAR
+        // ======================
         await usuario.save();
+
+        // actualizar sesión
+        req.session.usuario = usuario;
 
         res.redirect(`/perfil/${userId}`);
 
     } catch (error) {
+
         console.error(error);
+
         res.send("Error al actualizar perfil");
     }
 };
