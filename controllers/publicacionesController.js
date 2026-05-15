@@ -10,6 +10,7 @@ import Imagen from "../models/Imagen.js";
 import Notificacion from "../models/Notificacion.js";
 import Tag from "../models/Tag.js";
 import Interes from "../models/Interes.js";
+import Conversacion from "../models/Conversacion.js";
 import { Op } from "sequelize";
 const path = "./data/publicaciones.json";
 
@@ -459,7 +460,7 @@ export const showFeedSeguidos = async (req, res) => {
 };
 //marcar el interes en la imagen
 export const marcarInteres = async (req, res) => {
-
+    console.log("Entró a marcarInteres");
     const imagenId = req.params.id;
 
     const usuarioId = req.session.usuario.id;
@@ -496,17 +497,54 @@ export const marcarInteres = async (req, res) => {
             return res.redirect("/publicaciones");
         }
 
+                // ======================
         // CREAR INTERÉS
+        // ======================
         await Interes.create({
 
             usuario_id: usuarioId,
 
             imagen_id: imagenId
         });
+
+
         // AUTOR
-   
+  
         const autorId =
             imagen.Publicacion.usuario_id;
+        
+            // Crear conversacion
+      
+        const conversacionExistente =
+            await Conversacion.findOne({
+
+                where: {
+
+                    comprador_id: usuarioId,
+
+                    autor_id: autorId,
+
+                    imagen_id: imagenId
+                }
+            });
+
+        let conversacion;
+
+        if (!conversacionExistente) {
+
+            conversacion =
+                await Conversacion.create({
+
+                    comprador_id: usuarioId,
+
+                    autor_id: autorId,
+
+                    imagen_id: imagenId
+                });
+
+        } else {
+            conversacion =conversacionExistente;
+            }
 
         // NOTIFICACIÓN
         await Notificacion.create({
@@ -518,7 +556,9 @@ export const marcarInteres = async (req, res) => {
 
             usuario_id: autorId,
 
-            usuario_accion_id: usuarioId
+            usuario_accion_id: usuarioId,
+
+            conversacion_id: conversacion.id
         });
 
         res.redirect("/publicaciones");

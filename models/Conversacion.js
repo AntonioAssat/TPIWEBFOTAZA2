@@ -15,11 +15,14 @@ const Conversacion = sequelize.define(
 );
 
 export default Conversacion;
-// Relaciones
+
+// RELACIONES
 
 import User from "./User.js";
 
 import Imagen from "./Imagen.js";
+
+import Mensaje from "./Mensaje.js";
 
 // comprador
 User.hasMany(Conversacion, {
@@ -48,4 +51,13 @@ Imagen.hasMany(Conversacion, {
 
 Conversacion.belongsTo(Imagen, {
     foreignKey: "imagen_id"
+});
+
+// mensajes
+Conversacion.hasMany(Mensaje, {
+    foreignKey: "conversacion_id"
+});
+
+Mensaje.belongsTo(Conversacion, {
+    foreignKey: "conversacion_id"
 });

@@ -50,6 +50,11 @@ html
               a.nav-link(href="/notificaciones")
                 | Notificaciones
 
+            li.nav-item
+
+              a.nav-link(href="/conversaciones")
+                | Conversaciones
+
           if usuario
 
             ul.navbar-nav
@@ -327,25 +332,35 @@ html
                               | Tenés que iniciar sesión para valorar
                           
                           // ME INTERESA
-                          h4 Me interesa
+                          if img.licencia== "copyright"
+                          
+                            
+                            h4 Me interesa
 
-                          if usuario
+                            p.text-muted
+                              | Esta imagen posee copyright y puede adquirirse contactando al autor.
 
-                            form(
-                              action=`/imagenes/${img.id}/interes`
-                              method="POST"
-                              class="mb-4"
-                            )
 
-                              button.btn.btn-info(
-                                type="submit"
+                            if usuario
+
+                              form(
+                                action=`/imagenes/${img.id}/interes`
+                                method="POST"
+                                class="mb-4"
                               )
+
+                               button(type="submit")
                                 | ❤️ Me interesa
                         
-                          else
+                            else
 
                              p.text-muted
                                | Tenés que iniciar sesión para mostrar interés
+                          else
+
+                          
+                            .alert.alert-light.border
+                              | Esta imagen es de dominio público y puede ser utilizada libremente.
                           // ======================
                           // DENUNCIAS
                           // ======================

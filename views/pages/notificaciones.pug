@@ -31,6 +31,9 @@ html
           a.nav-link(href="/feed")
             | Feed
 
+          a.nav-link(href="/conversaciones")
+            | Conversaciones
+
     // ======================
     // CONTENIDO
     // ======================
@@ -87,10 +90,28 @@ html
                     span.badge.bg-primary.mb-2
                       | Nuevo seguidor
 
+                  if n.tipo == "interes"
+
+                    span.badge.bg-info.text-dark.mb-2
+                      | Interés en imagen
+
+                  // ======================
+                  // BOTÓN CHAT
+                  // ======================
+                  if n.conversacion_id
+
+                    .mt-3
+
+                      a.btn.btn-primary.btn-sm(
+                        href=`/conversaciones/${n.conversacion_id}`
+                      )
+                        | Abrir conversación
+
                   // ======================
                   // FECHA
                   // ======================
-                  p.text-muted.mb-0.mt-2
+                  p.text-muted.mb-0.mt-3
+
                     small
                       | #{n.fechaFormateada}
 

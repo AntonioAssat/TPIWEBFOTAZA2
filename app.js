@@ -64,7 +64,10 @@ app.use("/", userRoutes);
 
 import publicacionesRoutes from "./routes/publicacionesRoutes.js";
 app.use("/", publicacionesRoutes);
-
+//conversaciones
+import conversacionesRoutes
+from "./routes/conversaciones.js";
+app.use(conversacionesRoutes);
 // Servidor
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);

@@ -21,6 +21,10 @@ const Notificacion = sequelize.define("Notificacion", {
     usuario_accion_id: {
         type: DataTypes.INTEGER,
         allowNull: false
+    },
+    conversacion_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true
     }
 
 });

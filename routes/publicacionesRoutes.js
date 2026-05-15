@@ -40,11 +40,11 @@ router.post("/imagenes/:id/valorar", isAuthenticated, addRating);
 //denuncias
 router.post("/imagenes/:id/denunciar", isAuthenticated, addDenuncia);
 
-router.get("/feed", isAuthenticated, showFeedSeguidos);
-
 router.post(
     "/imagenes/:id/interes",
     isAuthenticated,
     marcarInteres
 );
+router.get("/feed", isAuthenticated, showFeedSeguidos);
+
 export default router;

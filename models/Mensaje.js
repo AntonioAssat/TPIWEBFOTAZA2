@@ -18,9 +18,7 @@ export default Mensaje;
 
 import User from "./User.js";
 
-import Conversacion from "./Conversacion.js";
-
-// emisor
+// usuario emisor
 User.hasMany(Mensaje, {
     foreignKey: "emisor_id"
 });
@@ -28,13 +26,4 @@ User.hasMany(Mensaje, {
 Mensaje.belongsTo(User, {
     as: "Emisor",
     foreignKey: "emisor_id"
-});
-
-// conversación
-Conversacion.hasMany(Mensaje, {
-    foreignKey: "conversacion_id"
-});
-
-Mensaje.belongsTo(Conversacion, {
-    foreignKey: "conversacion_id"
 });
