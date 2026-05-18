@@ -9,6 +9,8 @@ import sequelize from "./config/database.js";
 import User from "./models/User.js";
 import "./models/Conversacion.js";
 import "./models/Mensaje.js";
+import "./models/Coleccion.js";
+import coleccionesRoutes from "./routes/colecciones.js";
 //reinicia servidor
 //await sequelize.sync();
 await sequelize.sync({ alter: true });
@@ -54,6 +56,8 @@ app.use((req, res, next) => {
     delete req.session.mensaje;
     next();
 });
+//colecciones
+app.use(coleccionesRoutes);
 
 // Ruta de prueba
 import indexRoutes from "./routes/index.js";

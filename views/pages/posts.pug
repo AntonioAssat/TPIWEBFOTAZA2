@@ -55,6 +55,11 @@ html
               a.nav-link(href="/conversaciones")
                 | Conversaciones
 
+            li.nav-item
+
+              a.nav-link(href="/colecciones")
+                | Colecciones
+
           if usuario
 
             ul.navbar-nav
@@ -150,6 +155,46 @@ html
             else
 
               p Autor: Sin usuario
+
+            // ======================
+            // GUARDAR EN COLECCIÓN
+            // ======================
+            if usuario && colecciones.length > 0
+
+              .card.bg-light.border-0.mb-3
+
+                .card-body.p-3
+
+                  form(
+                    action=`/publicaciones/${pub.id}/guardar`
+                    method="POST"
+                  )
+
+                    .row.g-2.align-items-center
+
+                      .col-md-8
+
+                        select.form-select(
+                          name="coleccion_id"
+                          required
+                        )
+
+                          option(value="")
+                            | Guardar en colección...
+
+                          each c in colecciones
+
+                            option(value=c.id)
+                              = c.nombre
+
+                      .col-md-4
+
+                        .d-grid
+
+                          button.btn.btn-outline-primary(
+                            type="submit"
+                          )
+                            | ⭐ Guardar
 
             // ======================
             // CARRUSEL
@@ -330,16 +375,16 @@ html
 
                             p.text-muted
                               | Tenés que iniciar sesión para valorar
-                          
+
+                          // ======================
                           // ME INTERESA
-                          if img.licencia== "copyright"
-                          
-                            
+                          // ======================
+                          if img.licencia == "copyright"
+
                             h4 Me interesa
 
                             p.text-muted
                               | Esta imagen posee copyright y puede adquirirse contactando al autor.
-
 
                             if usuario
 
@@ -349,18 +394,21 @@ html
                                 class="mb-4"
                               )
 
-                               button(type="submit")
-                                | ❤️ Me interesa
-                        
+                                button.btn.btn-info(
+                                  type="submit"
+                                )
+                                  | ❤️ Me interesa
+
                             else
 
-                             p.text-muted
-                               | Tenés que iniciar sesión para mostrar interés
+                              p.text-muted
+                                | Tenés que iniciar sesión para mostrar interés
+
                           else
 
-                          
                             .alert.alert-light.border
                               | Esta imagen es de dominio público y puede ser utilizada libremente.
+
                           // ======================
                           // DENUNCIAS
                           // ======================

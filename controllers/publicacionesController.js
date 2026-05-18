@@ -11,6 +11,7 @@ import Notificacion from "../models/Notificacion.js";
 import Tag from "../models/Tag.js";
 import Interes from "../models/Interes.js";
 import Conversacion from "../models/Conversacion.js";
+import Coleccion from "../models/Coleccion.js";
 import { Op } from "sequelize";
 const path = "./data/publicaciones.json";
 
@@ -198,9 +199,22 @@ export const showPosts = async (req, res) => {
                 }
             });
         });
+        let colecciones = [];
 
+        if (req.session.usuario) {
+
+            colecciones =
+                await Coleccion.findAll({
+
+                    where: {
+                        usuario_id:
+                            req.session.usuario.id
+                    }
+                });
+        }
         res.render("pages/posts", {
-            publicaciones
+            publicaciones,
+            colecciones
         });
 
     } catch (error) {
@@ -497,9 +511,8 @@ export const marcarInteres = async (req, res) => {
             return res.redirect("/publicaciones");
         }
 
-                // ======================
         // CREAR INTERÉS
-        // ======================
+        
         await Interes.create({
 
             usuario_id: usuarioId,
@@ -561,7 +574,7 @@ export const marcarInteres = async (req, res) => {
             conversacion_id: conversacion.id
         });
 
-        res.redirect("/publicaciones");
+        res.redirect(`/conversaciones/${conversacion.id}`);
 
     } catch (error) {
 
