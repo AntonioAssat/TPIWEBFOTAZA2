@@ -31,7 +31,7 @@ form.addEventListener("submit", (e) => {
     }
     // PASSWORD
 
-    if (password.length < 6) {
+    if (password.length < 4) {
 
         e.preventDefault();
 

@@ -11,6 +11,7 @@ import "./models/Conversacion.js";
 import "./models/Mensaje.js";
 import "./models/Coleccion.js";
 import coleccionesRoutes from "./routes/colecciones.js";
+import adminRoutes from "./routes/admin.js";
 //reinicia servidor
 //await sequelize.sync();
 await sequelize.sync({ alter: true });
@@ -72,6 +73,9 @@ app.use("/", publicacionesRoutes);
 import conversacionesRoutes
 from "./routes/conversaciones.js";
 app.use(conversacionesRoutes);
+
+//admin
+app.use(adminRoutes);
 // Servidor
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);

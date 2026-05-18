@@ -78,7 +78,8 @@ export const loginUser = async (req, res) => {
         // Guardar sesión 
         req.session.usuario = {
             id: usuario.id,
-            username: usuario.username
+            username: usuario.username,
+            rol: usuario.rol
         };
 
         // Redirige al feed

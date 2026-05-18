@@ -136,13 +136,21 @@ export const showPosts = async (req, res) => {
 
                     // SI NO ESTÁ LOGUEADO
                     // SOLO VE IMÁGENES PÚBLICAS
-                    where: !req.session.usuario
-                        ? {
-                              licencia: {
-                                  [Op.ne]: "copyright"
-                              }
-                          }
-                        : undefined,
+                    where: {
+
+                        estado: {
+                            [Op.ne]: "eliminada"
+                        },
+
+                        ...( !req.session.usuario
+                            ? {
+                                licencia: {
+                                    [Op.ne]: "copyright"
+                                }
+                            }
+                            : {}
+                        )
+                    },
 
                     required: false,
 
@@ -399,15 +407,23 @@ export const addDenuncia = async (req, res) => {
         });
 
         // cambiar estado
-        if (total >= 3) {
-            imagen.estado = "en_revision";
-        } else {
-            imagen.estado = "denunciada";
-        }
+       if (total > 3) {
 
+            imagen.estado = "en_revision";
+
+            req.session.mensaje =
+                "La imagen pasó a revisión por múltiples denuncias";
+
+        } else {
+
+            imagen.estado = "denunciada";
+
+            req.session.mensaje =
+                `Denuncia registrada (${total}/4)`;
+        }
         await imagen.save();
 
-        req.session.mensaje = "Denuncia enviada correctamente";
+        
 
         res.redirect("/publicaciones");
 
