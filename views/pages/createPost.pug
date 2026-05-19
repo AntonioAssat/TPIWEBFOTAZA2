@@ -42,7 +42,6 @@ html
               form(
                 action="/publicaciones"
                 method="POST"
-                enctype="multipart/form-data"
               )
 
                 // ======================
@@ -120,8 +119,11 @@ html
                     type="text"
                     name="watermark"
                     id="watermark"
-                    placeholder="Opcional"
+                    placeholder="Ej: Fotaza / Antonio"
                   )
+
+                  .form-text
+                    | La marca de agua se incrusta automáticamente en la imagen
 
                 // ======================
                 // IMÁGENES
@@ -133,14 +135,18 @@ html
 
                   input.form-control(
                     type="file"
-                    name="imagenes"
                     id="imagenes"
                     accept="image/*"
                     multiple
                   )
 
                   .small.text-muted.mt-2
-                    | Podés agregar imágenes una por una
+                    | Las imágenes se comprimen automáticamente
+
+                // ======================
+                // INPUTS HIDDEN
+                // ======================
+                #hiddenInputs
 
                 // ======================
                 // PREVIEWS
@@ -163,147 +169,284 @@ html
     script.
 
       const inputImagenes =
-          document.getElementById("imagenes");
+        document.getElementById(
+          "imagenes"
+        );
 
       const previewContainer =
-          document.getElementById("previewContainer");
+        document.getElementById(
+          "previewContainer"
+        );
 
-      // acumulador real de archivos
-      const dataTransfer = new DataTransfer();
+      const hiddenInputs =
+        document.getElementById(
+          "hiddenInputs"
+        );
 
-      inputImagenes.addEventListener("change", (event) => {
+      inputImagenes.addEventListener(
+        "change",
+        async (event) => {
 
-          const file = event.target.files[0];
+          const files =
+            Array.from(
+              event.target.files
+            );
 
-          if (!file) return;
+          for (const file of files) {
 
-          // agregar archivo
-          dataTransfer.items.add(file);
+            const reader =
+              new FileReader();
 
-          // actualizar files reales
-          inputImagenes.files = dataTransfer.files;
+            reader.onload = (e) => {
 
-          // ======================
-          // CARD
-          // ======================
-          const col =
-              document.createElement("div");
+              const img =
+                new Image();
 
-          col.className = "col-md-4";
+              img.src =
+                e.target.result;
 
-          const card =
-              document.createElement("div");
+              img.onload = () => {
 
-          card.className = "card shadow-sm";
-
-          // ======================
-          // IMAGEN
-          // ======================
-          const img =
-              document.createElement("img");
-
-          img.className = "card-img-top";
-
-          img.style.height = "220px";
-
-          img.style.objectFit = "cover";
-
-          img.src = URL.createObjectURL(file);
-
-          // ======================
-          // BODY
-          // ======================
-          const body =
-              document.createElement("div");
-
-          body.className = "card-body";
-
-          // nombre
-          const name =
-              document.createElement("p");
-
-          name.className =
-              "small text-muted";
-
-          name.textContent = file.name;
-
-          // botón eliminar
-          const removeBtn =
-              document.createElement("button");
-
-          removeBtn.type = "button";
-
-          removeBtn.className =
-              "btn btn-danger btn-sm w-100";
-
-          removeBtn.textContent = "Eliminar";
-
-          // ======================
-          // ELIMINAR
-          // ======================
-          removeBtn.addEventListener("click", () => {
-
-              const newDataTransfer =
-                  new DataTransfer();
-
-              for (
-                  let i = 0;
-                  i < dataTransfer.files.length;
-                  i++
-              ) {
-
-                  if (
-                      dataTransfer.files[i].name !==
-                      file.name
-                  ) {
-
-                      newDataTransfer.items.add(
-                          dataTransfer.files[i]
-                      );
-                  }
-              }
-
-              // limpiar
-              dataTransfer.items.clear();
-
-              // reconstruir
-              for (
-                  let i = 0;
-                  i < newDataTransfer.files.length;
-                  i++
-              ) {
-
-                  dataTransfer.items.add(
-                      newDataTransfer.files[i]
+                const canvas =
+                  document.createElement(
+                    "canvas"
                   );
-              }
 
-              // actualizar input
-              inputImagenes.files =
-                  dataTransfer.files;
+                const MAX_WIDTH = 1200;
 
-              // eliminar preview
-              col.remove();
-          });
+                let width =
+                  img.width;
 
-          // ======================
-          // ARMAR CARD
-          // ======================
-          body.appendChild(name);
+                let height =
+                  img.height;
 
-          body.appendChild(removeBtn);
+                if (
+                  width > MAX_WIDTH
+                ) {
 
-          card.appendChild(img);
+                  height =
+                    height *
+                    (MAX_WIDTH / width);
 
-          card.appendChild(body);
+                  width =
+                    MAX_WIDTH;
+                }
 
-          col.appendChild(card);
+                canvas.width =
+                  width;
 
-          previewContainer.appendChild(col);
+                canvas.height =
+                  height;
 
-          
+                const ctx =
+                  canvas.getContext(
+                    "2d"
+                  );
 
-      });
+                // ======================
+                // DIBUJAR IMAGEN
+                // ======================
+                ctx.drawImage(
+                  img,
+                  0,
+                  0,
+                  width,
+                  height
+                );
+
+                // ======================
+                // WATERMARK REAL
+                // ======================
+                const watermark =
+                  document.getElementById(
+                    "watermark"
+                  ).value;
+
+                if (
+                  watermark.trim() !== ""
+                ) {
+
+                  ctx.save();
+
+                  // centro
+                  ctx.translate(
+                    canvas.width / 2,
+                    canvas.height / 2
+                  );
+
+                  // diagonal
+                  ctx.rotate(
+                    -Math.PI / 6
+                  );
+
+                  // estilo
+                  ctx.font =
+                    "bold 52px Arial";
+
+                  ctx.fillStyle =
+                    "rgba(255,255,255,0.22)";
+
+                  ctx.textAlign =
+                    "center";
+
+                  ctx.textBaseline =
+                    "middle";
+
+                  ctx.fillText(
+                    `© ${watermark}`,
+                    0,
+                    0
+                  );
+
+                  ctx.restore();
+                }
+
+                // ======================
+                // COMPRESIÓN
+                // ======================
+                const compressed =
+                  canvas.toDataURL(
+                    "image/jpeg",
+                    0.7
+                  );
+
+                // ======================
+                // HIDDEN INPUT
+                // ======================
+                const hidden =
+                  document.createElement(
+                    "input"
+                  );
+
+                hidden.type =
+                  "hidden";
+
+                hidden.name =
+                  "imagenesBase64";
+
+                hidden.value =
+                  compressed;
+
+                hiddenInputs.appendChild(
+                  hidden
+                );
+
+                // ======================
+                // PREVIEW
+                // ======================
+                const col =
+                  document.createElement(
+                    "div"
+                  );
+
+                col.className =
+                  "col-md-4";
+
+                const card =
+                  document.createElement(
+                    "div"
+                  );
+
+                card.className =
+                  "card shadow-sm";
+
+                const previewImg =
+                  document.createElement(
+                    "img"
+                  );
+
+                previewImg.src =
+                  compressed;
+
+                previewImg.className =
+                  "card-img-top";
+
+                previewImg.style.height =
+                  "220px";
+
+                previewImg.style.objectFit =
+                  "cover";
+
+                const body =
+                  document.createElement(
+                    "div"
+                  );
+
+                body.className =
+                  "card-body";
+
+                const name =
+                  document.createElement(
+                    "p"
+                  );
+
+                name.className =
+                  "small text-muted";
+
+                name.textContent =
+                  file.name;
+
+                // ======================
+                // BOTÓN ELIMINAR
+                // ======================
+                const removeBtn =
+                  document.createElement(
+                    "button"
+                  );
+
+                removeBtn.type =
+                  "button";
+
+                removeBtn.className =
+                  "btn btn-danger btn-sm w-100";
+
+                removeBtn.textContent =
+                  "Eliminar";
+
+                removeBtn.addEventListener(
+                  "click",
+                  () => {
+
+                    hidden.remove();
+
+                    col.remove();
+                  }
+                );
+
+                body.appendChild(
+                  name
+                );
+
+                body.appendChild(
+                  removeBtn
+                );
+
+                card.appendChild(
+                  previewImg
+                );
+
+                card.appendChild(
+                  body
+                );
+
+                col.appendChild(
+                  card
+                );
+
+                previewContainer.appendChild(
+                  col
+                );
+              };
+            };
+
+            reader.readAsDataURL(
+              file
+            );
+          }
+
+          inputImagenes.value = "";
+        }
+      );
 
     script(
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"

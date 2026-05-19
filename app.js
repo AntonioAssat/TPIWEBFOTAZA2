@@ -30,8 +30,14 @@ app.set("view engine", "pug");
 app.set("views", path.join(__dirname, "views"));
 
 // Middleware
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+app.use(express.urlencoded({
+    extended: true,
+    limit: "50mb"
+}));
+
+app.use(express.json({
+    limit: "50mb"
+}));
 
 // Archivos estáticos
 app.use(express.static(path.join(__dirname, "public")));
@@ -41,7 +47,7 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: false,   // 🔥 importante en localhost
+        secure: false,   //importante en localhost
         httpOnly: true
     }
 }));

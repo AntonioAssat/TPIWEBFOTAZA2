@@ -31,7 +31,6 @@ router.get("/perfil/:id/editar", isAuthenticated, editPerfilForm);
 router.post(
   "/perfil/:id/editar",
   isAuthenticated,
-  upload.single("avatar"),
   updatePerfil
 );
 

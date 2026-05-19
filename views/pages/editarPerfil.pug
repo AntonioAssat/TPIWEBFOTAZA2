@@ -47,7 +47,6 @@ html
               form(
                 action=`/perfil/${usuario.id}/editar`
                 method="POST"
-                enctype="multipart/form-data"
               )
 
                 // ======================
@@ -108,15 +107,23 @@ html
                 // ======================
                 .mb-3
 
-                  label.form-label(for="avatar")
+                  label.form-label(for="avatarInput")
                     | Foto de perfil
 
                   input.form-control(
                     type="file"
-                    name="avatar"
-                    id="avatar"
+                    id="avatarInput"
                     accept="image/*"
                   )
+
+                  input(
+                    type="hidden"
+                    name="avatarBase64"
+                    id="avatarBase64"
+                  )
+
+                  .form-text
+                    | La imagen se comprimirá automáticamente
 
                 // ======================
                 // BIO
@@ -169,29 +176,114 @@ html
                 // ======================
                 .d-grid
 
-                  button.btn.btn-primary.btn-lg(type="submit")
+                  button.btn.btn-primary.btn-lg(
+                    type="submit"
+                  )
                     | Guardar cambios
 
     // ======================
-    // PREVIEW AVATAR
+    // COMPRESIÓN + BASE64
     // ======================
     script.
 
       const avatarInput =
-          document.getElementById("avatar");
+        document.getElementById(
+          "avatarInput"
+        );
+
+      const avatarBase64 =
+        document.getElementById(
+          "avatarBase64"
+        );
 
       const preview =
-          document.getElementById("previewAvatar");
+        document.getElementById(
+          "previewAvatar"
+        );
 
-      avatarInput.addEventListener("change", (event) => {
+      avatarInput.addEventListener(
+        "change",
+        (e) => {
 
-          const file = event.target.files[0];
+          const file =
+            e.target.files[0];
 
-          if (file) {
+          if (!file) return;
 
-              preview.src = URL.createObjectURL(file);
-          }
-      });
+          const reader =
+            new FileReader();
+
+          reader.onload = (event) => {
+
+            const img = new Image();
+
+            img.src =
+              event.target.result;
+
+            img.onload = () => {
+
+              const canvas =
+                document.createElement(
+                  "canvas"
+                );
+
+              const MAX_WIDTH = 800;
+
+              let width =
+                img.width;
+
+              let height =
+                img.height;
+
+              // ======================
+              // REDIMENSIONAR
+              // ======================
+              if (width > MAX_WIDTH) {
+
+                height =
+                  height *
+                  (MAX_WIDTH / width);
+
+                width = MAX_WIDTH;
+              }
+
+              canvas.width = width;
+
+              canvas.height = height;
+
+              const ctx =
+                canvas.getContext("2d");
+
+              ctx.drawImage(
+                img,
+                0,
+                0,
+                width,
+                height
+              );
+
+              // ======================
+              // COMPRESIÓN
+              // ======================
+              const compressed =
+                canvas.toDataURL(
+                  "image/jpeg",
+                  0.7
+                );
+
+              // guardar base64
+              avatarBase64.value =
+                compressed;
+
+              // preview
+              preview.src =
+                compressed;
+            };
+          };
+
+          reader.readAsDataURL(file);
+        }
+      );
 
     script(
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"

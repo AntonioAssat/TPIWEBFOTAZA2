@@ -28,10 +28,12 @@ export const createPost = async (req, res) => {
         descripcion,
         tags,
         licencia,
-        watermark
+        watermark,
+        imagenesBase64
     } = req.body;
 
-    const usuarioId = req.session.usuario.id;
+    const usuarioId =
+        req.session.usuario.id;
 
     try {
 
@@ -42,9 +44,11 @@ export const createPost = async (req, res) => {
             await Publicacion.create({
 
                 titulo,
-                descripcion,
-                usuario_id: usuarioId
 
+                descripcion,
+
+                usuario_id:
+                    usuarioId
             });
 
         // ======================
@@ -52,60 +56,91 @@ export const createPost = async (req, res) => {
         // ======================
         if (tags) {
 
-            const listaTags = tags.split(",");
+            const listaTags =
+                tags.split(",");
 
             for (let nombreTag of listaTags) {
 
                 nombreTag =
-                    nombreTag.trim().toLowerCase();
+                    nombreTag
+                        .trim()
+                        .toLowerCase();
 
-                let tag = await Tag.findOne({
+                let tag =
+                    await Tag.findOne({
 
-                    where: {
-                        nombre: nombreTag
-                    }
-                });
+                        where: {
+                            nombre:
+                                nombreTag
+                        }
+                    });
 
                 // crear si no existe
                 if (!tag) {
 
-                    tag = await Tag.create({
-                        nombre: nombreTag
-                    });
+                    tag =
+                        await Tag.create({
+
+                            nombre:
+                                nombreTag
+                        });
                 }
 
                 // relacionar
-                await publicacion.addTag(tag);
+                await publicacion.addTag(
+                    tag
+                );
             }
         }
-        // IMÁGENES
-        if (req.files && req.files.length > 0) {
 
-            for (const file of req.files) {
+        // ======================
+        // IMÁGENES BASE64
+        // ======================
+        if (imagenesBase64) {
+
+            // si viene una sola
+            const listaImagenes =
+                Array.isArray(
+                    imagenesBase64
+                )
+                    ? imagenesBase64
+                    : [imagenesBase64];
+
+            for (
+                const base64
+                of listaImagenes
+            ) {
 
                 await Imagen.create({
 
-                    url:
-                        "/uploads/" + file.filename,
+                    url: base64,
 
                     licencia,
 
                     watermark,
+
+                    estado: "activa",
 
                     publicacion_id:
                         publicacion.id
                 });
             }
         }
-        // REDIRECT
 
-        res.redirect("/publicaciones");
+        // ======================
+        // REDIRECT
+        // ======================
+        res.redirect(
+            "/publicaciones"
+        );
 
     } catch (error) {
 
         console.error(error);
 
-        res.send("Error al crear publicación");
+        res.send(
+            "Error al crear publicación"
+        );
     }
 };
 //mostrar las publicaciones mas usuario
@@ -303,54 +338,121 @@ export const addComment = async (req, res) => {
 const pathValoraciones = "./data/valoraciones.json";
 
 export const addRating = async (req, res) => {
+
     const { valor } = req.body;
+
     const imagenId = req.params.id;
-    const usuarioId = req.session.usuario.id;
+
+    const usuarioId =
+        req.session.usuario.id;
 
     try {
-        // Buscar si ya votó
-        const existente = await Valoracion.findOne({
-            where: {
-                imagen_id: imagenId,
-                usuario_id: usuarioId
-            }
-        });
+
+        // Buscar imagen
+  
+        const imagen =
+            await Imagen.findByPk(
+                imagenId
+            );
+
+        if (!imagen) {
+
+            return res.send(
+                "Imagen no encontrada"
+            );
+        }
+
+        // Buscar publicación
+
+        const publicacion =
+            await Publicacion.findByPk(
+                imagen.publicacion_id
+            );
+
+        // Bloquear si es propia
+ 
+        if (
+            publicacion.usuario_id ==
+            usuarioId
+        ) {
+
+            return res.send(
+                "No podés valorar tu propia imagen"
+            );
+        }
+
+        // Buscar valoración existente
+
+        const existente =
+            await Valoracion.findOne({
+
+                where: {
+
+                    imagen_id:
+                        imagenId,
+
+                    usuario_id:
+                        usuarioId
+                }
+            });
+
+        // Actualizar si existe, sino crear
 
         if (existente) {
-            // actualizar voto
-            existente.valor = valor;
+
+            existente.valor =
+                valor;
+
             await existente.save();
+
         } else {
-            // crear voto
+
+            // Crear nueva valoración
+
             await Valoracion.create({
+
                 valor,
-                imagen_id: imagenId,
-                usuario_id: usuarioId
-            });
-        }
-        //enviar notificacion
-        const imagen = await Imagen.findByPk(imagenId);
 
-        const publicacion = await Publicacion.findByPk(imagen.publicacion_id);
+                imagen_id:
+                    imagenId,
 
-        if (publicacion.usuario_id != usuarioId) {
-
-            await Notificacion.create({
-                tipo: "valoracion",
-                mensaje: "valoró tu imagen",
-                usuario_id: publicacion.usuario_id,
-                usuario_accion_id: usuarioId
+                usuario_id:
+                    usuarioId
             });
         }
 
-        res.redirect("/publicaciones");
+        // Notificación
+
+        await Notificacion.create({
+
+            tipo: "valoracion",
+
+            mensaje:
+                "valoró tu imagen",
+
+            usuario_id:
+                publicacion.usuario_id,
+
+            usuario_accion_id:
+                usuarioId
+        });
+
+        // ======================
+        // REDIRECT
+        // ======================
+        res.redirect(
+            "/publicaciones"
+        );
 
     } catch (error) {
+
         console.error(error);
-        res.send("Error al valorar");
+
+        res.send(
+            "Error al valorar"
+        );
     }
 };
-
 //denuncias
 export const addDenuncia = async (req, res) => {
     const { motivo, descripcion } = req.body;

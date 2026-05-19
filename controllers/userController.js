@@ -184,7 +184,8 @@ export const updatePerfil = async (req, res) => {
         bio,
         fechaNacimiento,
         password,
-        confirmPassword
+        confirmPassword,
+        avatarBase64
     } = req.body;
 
     try {
@@ -258,12 +259,11 @@ export const updatePerfil = async (req, res) => {
         }
 
         // ======================
-        // AVATAR
+        // AVATAR BASE64
         // ======================
-        if (req.file) {
+        if (avatarBase64) {
 
-            usuario.avatar =
-                "/uploads/" + req.file.filename;
+            usuario.avatar = avatarBase64;
         }
 
         // ======================
@@ -271,8 +271,19 @@ export const updatePerfil = async (req, res) => {
         // ======================
         await usuario.save();
 
-        // actualizar sesión
-        req.session.usuario = usuario;
+        // ======================
+        // ACTUALIZAR SESIÓN
+        // ======================
+        req.session.usuario = {
+
+            id: usuario.id,
+
+            username: usuario.username,
+
+            rol: usuario.rol,
+
+            avatar: usuario.avatar
+        };
 
         res.redirect(`/perfil/${userId}`);
 
