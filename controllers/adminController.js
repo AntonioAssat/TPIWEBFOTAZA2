@@ -1,7 +1,7 @@
 import Denuncia from "../models/Denuncia.js";
 import Imagen from "../models/Imagen.js";
 import User from "../models/User.js";
-
+import Publicacion from "../models/Publicacion.js";
 // Ver denuncias para administración
 
 export const showDenuncias =
@@ -98,6 +98,9 @@ async (req, res) => {
 
     try {
 
+        // ======================
+        // BUSCAR IMAGEN
+        // ======================
         const imagen =
             await Imagen.findByPk(
                 imagenId
@@ -105,15 +108,67 @@ async (req, res) => {
 
         if (!imagen) {
 
-            return res.send(
-                "Imagen no encontrada"
+            req.session.mensaje =
+                "Imagen no encontrada";
+
+            return res.redirect(
+                "/admin/denuncias"
             );
         }
 
-        imagen.estado = "eliminada";
+        // ======================
+        // ELIMINAR IMAGEN
+        // ======================
+        imagen.estado =
+            "eliminada";
 
         await imagen.save();
 
+        // ======================
+        // BUSCAR PUBLICACIÓN
+        // ======================
+        const publicacion =
+            await Publicacion.findByPk(
+                imagen.publicacion_id
+            );
+
+        // ======================
+        // BUSCAR AUTOR
+        // ======================
+        const usuario =
+            await User.findByPk(
+                publicacion.usuario_id
+            );
+
+        // ======================
+        // SUMAR STRIKE
+        // ======================
+        usuario.publicaciones_eliminadas += 1;
+
+        // ======================
+        // DESACTIVAR CUENTA
+        // ======================
+        if (
+            usuario.publicaciones_eliminadas >= 3
+        ) {
+
+            usuario.estadoCuenta =
+                "inactiva";
+
+            req.session.mensaje =
+                `Imagen eliminada. El usuario ${usuario.username} fue desactivado automáticamente`;
+
+        } else {
+
+            req.session.mensaje =
+                `Imagen eliminada. Strike ${usuario.publicaciones_eliminadas}/3`;
+        }
+
+        await usuario.save();
+
+        // ======================
+        // REDIRECT
+        // ======================
         res.redirect(
             "/admin/denuncias"
         );

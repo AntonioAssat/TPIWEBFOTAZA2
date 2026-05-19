@@ -55,39 +55,106 @@ export const registerUser = async (req, res) => {
     }
 };
 //procesar login
-export const loginUser = async (req, res) => {
-    const { email, password } = req.body;
+export const loginUser = async (
+    req,
+    res
+) => {
+
+    const {
+        email,
+        password
+    } = req.body;
 
     try {
-        // Buscar usuario
-        const usuario = await User.findOne({
-            where: { email }
-        });
-        //vverificar si existe el usario
+
+        // ======================
+        // BUSCAR USUARIO
+        // ======================
+        const usuario =
+            await User.findOne({
+
+                where: { email }
+            });
+
+        // ======================
+        // NO EXISTE
+        // ======================
         if (!usuario) {
-            return res.send("Usuario no encontrado");
+
+            req.session.mensaje =
+                "Usuario no encontrado";
+
+            return res.redirect("/login");
         }
 
-        // Comparar la contraseña
-        const coincide = await bcrypt.compare(password, usuario.password);
-        //si no coincide contraseña
+        // ======================
+        // CUENTA INACTIVA
+        // ======================
+        if (
+            usuario.estadoCuenta ===
+            "inactiva"
+        ) {
+
+            req.session.mensaje =
+                "Tu cuenta fue desactivada por múltiples publicaciones eliminadas";
+
+            return res.redirect("/login");
+        }
+
+        // ======================
+        // PASSWORD
+        // ======================
+        const coincide =
+            await bcrypt.compare(
+
+                password,
+
+                usuario.password
+            );
+
+        // ======================
+        // PASSWORD INCORRECTA
+        // ======================
         if (!coincide) {
-            return res.send("Contraseña incorrecta");
+
+            req.session.mensaje =
+                "Contraseña incorrecta";
+
+            return res.redirect("/login");
         }
 
-        // Guardar sesión 
+        // ======================
+        // SESIÓN
+        // ======================
         req.session.usuario = {
-            id: usuario.id,
-            username: usuario.username,
-            rol: usuario.rol
+
+            id:
+                usuario.id,
+
+            username:
+                usuario.username,
+
+            rol:
+                usuario.rol,
+
+            avatar:
+                usuario.avatar
         };
 
-        // Redirige al feed
-        res.redirect("/publicaciones");
+        // ======================
+        // REDIRECT
+        // ======================
+        res.redirect(
+            "/publicaciones"
+        );
 
     } catch (error) {
+
         console.error(error);
-        res.send("Error en login");
+
+        res.send(
+            "Error en login"
+        );
     }
 };
 //cerrar sesion

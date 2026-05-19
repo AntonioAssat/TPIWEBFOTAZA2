@@ -677,7 +677,7 @@ export const addDenuncia = async (req, res) => {
             return res.redirect("/publicaciones");
         }
 
-        // ✔ crear denuncia
+        //  crear denuncia
         await Denuncia.create({
             motivo,
             descripcion,
@@ -716,60 +716,159 @@ export const addDenuncia = async (req, res) => {
         res.send("Error al denunciar");
     }
 };
+//mostrar feed de seguidos
+export const showFeedSeguidos =
+async (req, res) => {
 
-export const showFeedSeguidos = async (req, res) => {
-    const usuarioId = req.session.usuario.id;
+    const usuarioId =
+        req.session.usuario.id;
 
     try {
-        // obtener a quién sigo
-        const follows = await Follow.findAll({
-            where: { seguidor_id: usuarioId }
-        });
 
-        const idsSeguidos = follows.map(f => f.seguido_id);
+        // ======================
+        // OBTENER SEGUIDOS
+        // ======================
+        const follows =
+            await Follow.findAll({
 
-        // traer publicaciones solo de esos usuarios
-        const publicaciones = await Publicacion.findAll({
-            where: {
-                usuario_id: idsSeguidos
-            },
-            include: [
-                {
-                    model: User,
-                    attributes: ["id", "username"]
-                },
-                {
-                    model: Imagen,
-                    include: [
-                        {
-                            model: Comentario,
-                            include: [{ model: User }]
-                        },
-                        {
-                            model: Valoracion
-                        }
-                    ]
+                where: {
+                    seguidor_id:
+                        usuarioId
                 }
-            ]
-        });
+            });
 
-        // promedio valoraciones (igual que ya tenías)
+        const idsSeguidos =
+            follows.map(
+
+                f => f.seguido_id
+            );
+
+        // ======================
+        // PUBLICACIONES
+        // ======================
+        const publicaciones =
+            await Publicacion.findAll({
+
+                where: {
+
+                    usuario_id:
+                        idsSeguidos
+                },
+
+                include: [
+
+                    {
+                        model: User,
+
+                        attributes: [
+                            "id",
+                            "username",
+                            "avatar"
+                        ]
+                    },
+
+                    {
+                        model: Imagen,
+
+                        where: {
+                            estado: "activa"
+                        },
+
+                        required: false,
+
+                        include: [
+
+                            {
+                                model: Comentario,
+
+                                include: [
+                                    {
+                                        model: User
+                                    }
+                                ]
+                            },
+
+                            {
+                                model: Valoracion
+                            }
+                        ]
+                    },
+
+                    {
+                        model: Tag
+                    }
+                ],
+
+                order: [
+                    ["createdAt", "DESC"]
+                ]
+            });
+
+        // ======================
+        // PROMEDIOS
+        // ======================
         publicaciones.forEach(pub => {
+
             pub.Imagens.forEach(img => {
-                if (img.Valoracions && img.Valoracions.length > 0) {
-                    const suma = img.Valoracions.reduce((acc, v) => acc + v.valor, 0);
-                    img.promedio = (suma / img.Valoracions.length).toFixed(1);
+
+                if (
+                    img.Valoracions &&
+                    img.Valoracions.length > 0
+                ) {
+
+                    const suma =
+                        img.Valoracions.reduce(
+
+                            (acc, v) =>
+                                acc + v.valor,
+
+                            0
+                        );
+
+                    img.promedio =
+                        (
+                            suma /
+                            img.Valoracions.length
+                        ).toFixed(1);
+
                 } else {
+
                     img.promedio = 0;
                 }
             });
         });
 
-        res.render("pages/posts", { publicaciones });
+        // ======================
+        // COLECCIONES
+        // ======================
+        const colecciones =
+            await Coleccion.findAll({
+
+                where: {
+                    usuario_id:
+                        usuarioId
+                }
+            });
+
+        // ======================
+        // RENDER
+        // ======================
+        res.render(
+            "pages/posts",
+
+            {
+                publicaciones,
+                colecciones
+            }
+        );
 
     } catch (error) {
+
         console.error(error);
-        res.send("Error al cargar feed");
+
+        res.send(
+            "Error al cargar feed"
+        );
     }
 };
 //marcar el interes en la imagen
