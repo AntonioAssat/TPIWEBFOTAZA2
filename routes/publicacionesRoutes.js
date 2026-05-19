@@ -1,5 +1,4 @@
 import express from "express";
-import upload from "../middlewares/upload.js";
 import { 
     showCreatePost, 
     createPost,
@@ -10,7 +9,9 @@ import {
     addRating,
     addDenuncia,
     showFeedSeguidos,
-    marcarInteres
+    marcarInteres,
+    closeComments,
+    openComments
 } from "../controllers/publicacionesController.js";
 import { isAuthenticated } from "../middlewares/auth.js";
 
@@ -24,7 +25,6 @@ router.get("/publicaciones/nueva", isAuthenticated, showCreatePost);
 router.post(
     "/publicaciones",
     isAuthenticated,
-    upload.array("imagenes", 10),
     createPost
 );
 
@@ -33,7 +33,18 @@ router.post("/publicaciones/:id/imagen", isAuthenticated, addImage);
 
 //comentarios
 router.post("/imagenes/:id/comentario", isAuthenticated, addComment);
-
+//cerrar comentarios
+router.post(
+    "/imagenes/:id/cerrar-comentarios",
+    isAuthenticated,
+    closeComments
+);
+//abrir comentarios
+router.post(
+    "/imagenes/:id/abrir-comentarios",
+    isAuthenticated,
+    openComments
+);
 //valoaciones
 router.post("/imagenes/:id/valorar", isAuthenticated, addRating);
 

@@ -13,7 +13,7 @@ import Interes from "../models/Interes.js";
 import Conversacion from "../models/Conversacion.js";
 import Coleccion from "../models/Coleccion.js";
 import { Op } from "sequelize";
-const path = "./data/publicaciones.json";
+
 
 // Mostrar formulario
 export const showCreatePost = (req, res) => {
@@ -295,47 +295,226 @@ export const addImage = async (req, res) => {
     }
 };
 //comentarios
-const pathComentarios = "./data/comentarios.json";
 
 export const addComment = async (req, res) => {
+
     const { texto } = req.body;
-    const imagenId = req.params.id;
-    const usuarioId = req.session.usuario.id;
+
+    const imagenId =
+        req.params.id;
+
+    const usuarioId =
+        req.session.usuario.id;
 
     try {
+
+        
+        // Buscar imagen de la publicación
+   
+        const imagen =
+            await Imagen.findByPk(
+                imagenId
+            );
+
+        if (!imagen) {
+
+            return res.send(
+                "Imagen no encontrada"
+            );
+        }
+
+      
+        // Comentarios cerrados
+   
+        if (
+            imagen.comentarios_cerrados
+        ) {
+
+            return res.send(
+                "Los comentarios están cerrados"
+            );
+        }
+
+        // Crear comentario
+   
         await Comentario.create({
+
             texto,
-            imagen_id: imagenId,
-            usuario_id: usuarioId
+
+            imagen_id:
+                imagenId,
+
+            usuario_id:
+                usuarioId
         });
-        //notificacion
-        // buscar imagen
-        const imagen = await Imagen.findByPk(imagenId);
 
-        // buscar publicación
-        const publicacion = await Publicacion.findByPk(imagen.publicacion_id);
+        // Publicación
+ 
+        const publicacion =
+            await Publicacion.findByPk(
+                imagen.publicacion_id
+            );
 
-        // evitar notificarse a sí mismo
-        if (publicacion.usuario_id != usuarioId) {
+        // No notificar si el autor comenta su propia publicación
+
+        if (
+            publicacion.usuario_id !=
+            usuarioId
+        ) {
 
             await Notificacion.create({
+
                 tipo: "comentario",
-                mensaje: "comentó tu publicación",
-                usuario_id: publicacion.usuario_id,
-                usuario_accion_id: usuarioId
+
+                mensaje:
+                    "comentó tu publicación",
+
+                usuario_id:
+                    publicacion.usuario_id,
+
+                usuario_accion_id:
+                    usuarioId
             });
         }
 
-        res.redirect("/publicaciones");
+        // Redirect
+  
+        res.redirect(
+            "/publicaciones"
+        );
 
     } catch (error) {
+
         console.error(error);
-        res.send("Error al comentar");
+
+        res.send(
+            "Error al comentar"
+        );
+    }
+};
+//cerrar comentarios
+export const closeComments = async (req, res) => {
+
+    const imagenId =
+        req.params.id;
+
+    const usuarioId =
+        req.session.usuario.id;
+
+    try {
+
+        // Buscar imagen de la publicación
+  
+        const imagen =
+            await Imagen.findByPk(
+                imagenId
+            );
+
+        if (!imagen) {
+
+            return res.send(
+                "Imagen no encontrada"
+            );
+        }
+
+        // Publicación
+
+        const publicacion =
+            await Publicacion.findByPk(
+                imagen.publicacion_id
+            );
+
+        // Solo el autor puede cerrar comentarios
+
+        if (
+            publicacion.usuario_id !=
+            usuarioId
+        ) {
+
+            return res.send(
+                "No autorizado"
+            );
+        }
+
+        // Cerrar comentarios
+        
+        imagen.comentarios_cerrados =
+            true;
+
+        await imagen.save();
+
+        res.redirect(
+            "/publicaciones"
+        );
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.send(
+            "Error al cerrar comentarios"
+        );
+    }
+};
+//abrir comentarios
+export const openComments = async (req, res) => {
+
+    const imagenId =
+        req.params.id;
+
+    const usuarioId =
+        req.session.usuario.id;
+
+    try {
+
+        const imagen =
+            await Imagen.findByPk(
+                imagenId
+            );
+
+        if (!imagen) {
+
+            return res.send(
+                "Imagen no encontrada"
+            );
+        }
+
+        const publicacion =
+            await Publicacion.findByPk(
+                imagen.publicacion_id
+            );
+
+        // solo autor
+        if (
+            publicacion.usuario_id !=
+            usuarioId
+        ) {
+
+            return res.send(
+                "No autorizado"
+            );
+        }
+
+        imagen.comentarios_cerrados =
+            false;
+
+        await imagen.save();
+
+        res.redirect(
+            "/publicaciones"
+        );
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.send(
+            "Error al abrir comentarios"
+        );
     }
 };
 
 //valoraciones
-const pathValoraciones = "./data/valoraciones.json";
 
 export const addRating = async (req, res) => {
 
@@ -376,8 +555,11 @@ export const addRating = async (req, res) => {
             usuarioId
         ) {
 
-            return res.send(
-                "No podés valorar tu propia imagen"
+            req.session.mensaje =
+                "No podés valorar tu propia imagen";
+
+            return res.redirect(
+                "/publicaciones"
             );
         }
 

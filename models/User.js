@@ -43,6 +43,10 @@ const User = sequelize.define("User", {
     fechaNacimiento: {
     type: DataTypes.DATEONLY,
     allowNull: true
+    },
+    publicaciones_eliminadas: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0
     }
 });
 

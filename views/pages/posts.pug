@@ -280,6 +280,37 @@ html
                           // COMENTARIOS
                           // ======================
                           h4.mt-4 Comentarios
+                          if usuario && pub.User && usuario.id == pub.User.id
+
+                            .mb-3
+
+                              if !img.comentarios_cerrados
+
+                                form(
+                                  action=`/imagenes/${img.id}/cerrar-comentarios`
+                                  method="POST"
+                                )
+
+                                  button.btn.btn-outline-danger.btn-sm(
+                                    type="submit"
+                                  )
+                                    | 🔒 Cerrar comentarios
+
+                              else
+
+                                form(
+                                  action=`/imagenes/${img.id}/abrir-comentarios`
+                                  method="POST"
+                                )
+
+                                  button.btn.btn-outline-success.btn-sm(
+                                    type="submit"
+                                  )
+                                    | 🔓 Reabrir comentarios
+                          if img.comentarios_cerrados
+
+                            .alert.alert-warning.py-2
+                              | 🔒 Los comentarios fueron cerrados por el autor 
 
                           if img.Comentarios && img.Comentarios.length > 0
 
@@ -301,26 +332,32 @@ html
 
                           if usuario
 
-                            form(
-                              action=`/imagenes/${img.id}/comentario`
-                              method="POST"
-                              class="mb-4"
-                            )
+                            if !img.comentarios_cerrados
+                              form(
+                                action=`/imagenes/${img.id}/comentario`
+                                method="POST"
+                                class="mb-4"
+                              )
 
-                              .input-group
+                                .input-group
 
-                                input.form-control(
-                                  type="text"
-                                  name="texto"
-                                  placeholder="Escribí un comentario"
-                                  required
-                                )
+                                  input.form-control(
+                                    type="text"
+                                    name="texto"
+                                    placeholder="Escribí un comentario"
+                                    required
+                                  )
 
-                                button.btn.btn-success(
-                                  type="submit"
-                                )
-                                  | Comentar
+                                  button.btn.btn-success(
+                                    type="submit"
+                                  )
+                                    | Comentar
 
+                            else
+
+                              p.text-muted
+                               | Los comentarios están cerrados
+                               
                           else
 
                             p.text-muted

@@ -20,6 +20,10 @@ const Imagen = sequelize.define("Imagen", {
     estado: {
     type: DataTypes.STRING,
     defaultValue: "activa"
+    },
+    comentarios_cerrados: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
     }
 });
 
