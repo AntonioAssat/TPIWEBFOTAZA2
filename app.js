@@ -12,6 +12,7 @@ import "./models/Mensaje.js";
 import "./models/Coleccion.js";
 import coleccionesRoutes from "./routes/colecciones.js";
 import adminRoutes from "./routes/admin.js";
+import "./models/DenunciaComentario.js";
 //reinicia servidor
 //await sequelize.sync();
 await sequelize.sync({ alter: true });

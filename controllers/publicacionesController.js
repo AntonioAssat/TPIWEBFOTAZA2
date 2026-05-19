@@ -12,6 +12,7 @@ import Tag from "../models/Tag.js";
 import Interes from "../models/Interes.js";
 import Conversacion from "../models/Conversacion.js";
 import Coleccion from "../models/Coleccion.js";
+import DenunciaComentario from "../models/DenunciaComentario.js";
 import { Op } from "sequelize";
 
 
@@ -194,7 +195,23 @@ export const showPosts = async (req, res) => {
                         // COMENTARIOS
                         {
                             model: Comentario,
-                            include: [{ model: User }]
+
+                            include: [
+
+                                {
+                                    model: User
+                                },
+
+                                {
+                                    model: DenunciaComentario,
+
+                                    include: [
+                                        {
+                                            model: User
+                                        }
+                                    ]
+                                }
+                            ]
                         },
 
                         // VALORACIONES
@@ -980,5 +997,165 @@ export const marcarInteres = async (req, res) => {
         console.error(error);
 
         res.send("Error al marcar interés");
+    }
+};
+
+//denuncias de comentarios
+export const denunciarComentario = async (req, res) => {
+
+    const comentarioId = req.params.id;
+
+    const usuarioId = req.session.usuario.id;
+
+    const {motivo, descripcion} = req.body;
+
+    try {
+        // Comentario
+
+        const comentario = await Comentario.findByPk(comentarioId);
+
+        if (!comentario) {
+
+            req.session.mensaje = "Comentario no encontrado";
+
+            return res.redirect("/publicaciones");
+        }
+
+     
+        // No denunciar propio comentario
+ 
+        const existente = await DenunciaComentario.findOne({
+
+                where: {
+
+                    comentario_id:
+                        comentarioId,
+
+                    usuario_id:
+                        usuarioId
+                }
+            });
+
+        if (existente) {
+
+            req.session.mensaje = "Ya denunciaste este comentario";
+
+            return res.redirect("/publicaciones");
+        }
+
+        // Crear denuncia
+    
+        await DenunciaComentario.create({
+
+            motivo,
+            descripcion,
+            comentario_id:
+                comentarioId,
+            usuario_id:
+                usuarioId
+        });
+
+        req.session.mensaje =
+            "Comentario denunciado correctamente";
+
+        res.redirect(
+            "/publicaciones"
+        );
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.send("Error al denunciar comentario");
+    }
+};
+//eliminar comentario (solo autor de la publicación)
+export const deleteComment =
+async (req, res) => {
+
+    const comentarioId =
+        req.params.id;
+
+    const usuarioId =
+        req.session.usuario.id;
+
+    try {
+
+        // ======================
+        // COMENTARIO
+        // ======================
+        const comentario =
+            await Comentario.findByPk(
+                comentarioId
+            );
+
+        if (!comentario) {
+
+            req.session.mensaje =
+                "Comentario no encontrado";
+
+            return res.redirect(
+                "/publicaciones"
+            );
+        }
+
+        // ======================
+        // IMAGEN
+        // ======================
+        const imagen =
+            await Imagen.findByPk(
+                comentario.imagen_id
+            );
+
+        // ======================
+        // PUBLICACIÓN
+        // ======================
+        const publicacion =
+            await Publicacion.findByPk(
+                imagen.publicacion_id
+            );
+
+        // ======================
+        // SOLO AUTOR
+        // ======================
+        if (
+            publicacion.usuario_id !=
+            usuarioId
+        ) {
+
+            req.session.mensaje =
+                "No autorizado";
+
+            return res.redirect(
+                "/publicaciones"
+            );
+        }
+
+        // ======================
+        // ELIMINAR DENUNCIAS
+        // ======================
+        await DenunciaComentario.destroy({
+
+            where: {
+
+                comentario_id:
+                    comentarioId
+            }
+        });
+
+        // ======================
+        // ELIMINAR COMENTARIO
+        // ======================
+        await comentario.destroy();
+
+        req.session.mensaje ="Comentario eliminado correctamente";
+
+        res.redirect("/publicaciones");
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.send("Error al eliminar comentario");
     }
 };

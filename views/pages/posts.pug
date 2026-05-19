@@ -159,7 +159,7 @@ html
             // ======================
             // GUARDAR EN COLECCIÓN
             // ======================
-            if usuario && colecciones &&colecciones.length > 0
+            if usuario && colecciones && colecciones.length > 0
 
               .card.bg-light.border-0.mb-3
 
@@ -236,21 +236,12 @@ html
                         // ======================
                         // IMAGEN
                         // ======================
-                        .position-relative.text-center.mb-3
+                        .text-center.mb-3
 
                           img.img-fluid.rounded(
                             src=img.url
                             style="max-height:500px; object-fit:cover;"
                           )
-
-                          if img.watermark
-
-                            .position-absolute.bottom-0.end-0.p-3
-
-                              span(
-                                style="background:rgba(0,0,0,0.35); color:white; padding:6px 12px; border-radius:10px; font-size:18px; font-weight:bold; opacity:0.75; backdrop-filter:blur(2px);"
-                              )
-                                | © #{img.watermark}
 
                         // ======================
                         // DATOS
@@ -264,7 +255,6 @@ html
 
                           strong Estado:
                           |  #{img.estado}
-
 
                         // ======================
                         // BLOQUEO
@@ -280,6 +270,7 @@ html
                           // COMENTARIOS
                           // ======================
                           h4.mt-4 Comentarios
+
                           if usuario && pub.User && usuario.id == pub.User.id
 
                             .mb-3
@@ -307,16 +298,20 @@ html
                                     type="submit"
                                   )
                                     | 🔓 Reabrir comentarios
+
                           if img.comentarios_cerrados
 
                             .alert.alert-warning.py-2
                               | 🔒 Los comentarios fueron cerrados por el autor 
 
+                          // ======================
+                          // LISTA COMENTARIOS
+                          // ======================
                           if img.Comentarios && img.Comentarios.length > 0
 
                             each c in img.Comentarios
 
-                              .border-bottom.pb-2.mb-2
+                              .border-bottom.pb-3.mb-3
 
                                 p.mb-1
                                   = c.texto
@@ -325,14 +320,118 @@ html
                                   | por 
                                   = c.User.username
 
+                                // ======================
+                                // DENUNCIAS VISIBLES AL AUTOR
+                                // ======================
+                                if usuario && pub.User && usuario.id == pub.User.id
+
+                                  if c.DenunciaComentarios && c.DenunciaComentarios.length > 0
+
+                                    .alert.alert-danger.mt-3
+
+                                      h6.mb-3
+                                        | 🚨 Comentario denunciado
+
+                                      p.mb-2
+
+                                        strong
+                                          | Cantidad de denuncias:
+                                        |  #{c.DenunciaComentarios.length}
+
+                                      each d in c.DenunciaComentarios
+
+                                        .card.mb-2.border-danger
+
+                                          .card-body.py-2
+
+                                            p.mb-1
+
+                                              strong Motivo:
+                                              |  #{d.motivo}
+
+                                            p.mb-1
+
+                                              strong Descripción:
+                                              |  #{d.descripcion}
+
+                                            small.text-muted
+
+                                              | denunciado por 
+                                              = d.User.username
+
+                                      form(
+                                        action=`/comentarios/${c.id}/eliminar`
+                                        method="POST"
+                                        class="mt-3"
+                                      )
+
+                                        button.btn.btn-danger.btn-sm(
+                                          type="submit"
+                                        )
+                                          | 🗑 Eliminar comentario
+
+                                // ======================
+                                // DENUNCIAR COMENTARIO
+                                // ======================
+                                if usuario && usuario.id != c.User.id
+
+                                  form(
+                                    action=`/comentarios/${c.id}/denunciar`
+                                    method="POST"
+                                    class="mt-2"
+                                  )
+
+                                    .row.g-2
+
+                                      .col-md-4
+
+                                        select.form-select.form-select-sm(
+                                          name="motivo"
+                                          required
+                                        )
+
+                                          option(value="")
+                                            | Motivo...
+
+                                          option(value="Insulto")
+                                            | Insulto
+
+                                          option(value="Spam")
+                                            | Spam
+
+                                          option(value="Contenido ofensivo")
+                                            | Contenido ofensivo
+
+                                      .col-md-5
+
+                                        input.form-control.form-control-sm(
+                                          type="text"
+                                          name="descripcion"
+                                          placeholder="Descripción"
+                                          required
+                                        )
+
+                                      .col-md-3
+
+                                        .d-grid
+
+                                          button.btn.btn-outline-danger.btn-sm(
+                                            type="submit"
+                                          )
+                                            | 🚨 Denunciar
+
                           else
 
                             p.text-muted
                               | Sin comentarios
 
+                          // ======================
+                          // FORM COMENTAR
+                          // ======================
                           if usuario
 
                             if !img.comentarios_cerrados
+
                               form(
                                 action=`/imagenes/${img.id}/comentario`
                                 method="POST"
@@ -356,7 +455,7 @@ html
                             else
 
                               p.text-muted
-                               | Los comentarios están cerrados
+                                | Los comentarios están cerrados
 
                           else
 
@@ -384,32 +483,39 @@ html
 
                           if usuario
 
-                            form(
-                              action=`/imagenes/${img.id}/valorar`
-                              method="POST"
-                              class="mb-4"
-                            )
+                            if usuario.id != pub.User.id
 
-                              .row.g-2
+                              form(
+                                action=`/imagenes/${img.id}/valorar`
+                                method="POST"
+                                class="mb-4"
+                              )
 
-                                .col-auto
+                                .row.g-2
 
-                                  select.form-select(
-                                    name="valor"
-                                  )
+                                  .col-auto
 
-                                    option(value="1") 1
-                                    option(value="2") 2
-                                    option(value="3") 3
-                                    option(value="4") 4
-                                    option(value="5") 5
+                                    select.form-select(
+                                      name="valor"
+                                    )
 
-                                .col-auto
+                                      option(value="1") 1
+                                      option(value="2") 2
+                                      option(value="3") 3
+                                      option(value="4") 4
+                                      option(value="5") 5
 
-                                  button.btn.btn-warning(
-                                    type="submit"
-                                  )
-                                    | Valorar
+                                  .col-auto
+
+                                    button.btn.btn-warning(
+                                      type="submit"
+                                    )
+                                      | Valorar
+
+                            else
+
+                              p.text-muted
+                                | No podés valorar tus propias imágenes
 
                           else
 

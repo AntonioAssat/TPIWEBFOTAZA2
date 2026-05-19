@@ -55,41 +55,29 @@ export const registerUser = async (req, res) => {
     }
 };
 //procesar login
-export const loginUser = async (
-    req,
-    res
-) => {
+export const loginUser = async (req, res) => {
 
-    const {
-        email,
-        password
-    } = req.body;
+    const {email, password} = req.body;
 
     try {
 
-        // ======================
-        // BUSCAR USUARIO
-        // ======================
-        const usuario =
-            await User.findOne({
-
-                where: { email }
+        // Buscar usuario por email
+    
+        const usuario = await User.findOne({
+            where: { email }
             });
 
-        // ======================
-        // NO EXISTE
-        // ======================
+        // No existe usuario
+
         if (!usuario) {
 
-            req.session.mensaje =
-                "Usuario no encontrado";
+            req.session.mensaje ="Usuario no encontrado";
 
             return res.redirect("/login");
         }
 
-        // ======================
-        // CUENTA INACTIVA
-        // ======================
+        // Cuenta inactiva
+       
         if (
             usuario.estadoCuenta ===
             "inactiva"
