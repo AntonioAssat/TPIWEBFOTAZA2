@@ -39,24 +39,27 @@ html
     // CONTENIDO
     // ======================
     .container
+      if mensaje
 
+        .alert.alert-warning.shadow-sm
+          = mensaje
       .row.justify-content-center
 
-        .col-lg-8
+        .col-lg-10
 
           // ======================
           // PERFIL
           // ======================
-          .card.shadow-sm.mb-4
+          .card.shadow-sm.mb-5.border-0
 
-            .card-body.text-center
+            .card-body.text-center.p-5
 
               // ======================
               // AVATAR
               // ======================
               if usuario.avatar
 
-                img.rounded-circle.mb-3.shadow(
+                img.rounded-circle.mb-4.shadow(
                   src=usuario.avatar
                   width="180"
                   height="180"
@@ -65,7 +68,7 @@ html
 
               else
 
-                img.rounded-circle.mb-3.shadow(
+                img.rounded-circle.mb-4.shadow(
                   src="https://via.placeholder.com/180"
                   width="180"
                   height="180"
@@ -74,37 +77,43 @@ html
               // ======================
               // USERNAME
               // ======================
-              h1.mb-3= usuario.username
+              h1.mb-3
+                = usuario.username
 
               // ======================
               // ESTADÍSTICAS
               // ======================
               .row.text-center.mb-4
 
-                .col
+                .col-md-6.mb-3
 
-                  .card.bg-primary.text-white
-
-                    .card-body
-
-                      h3= seguidores
-
-                      p.mb-0 Seguidores
-
-                .col
-
-                  .card.bg-dark.text-white
+                  .card.bg-primary.text-white.border-0.shadow-sm
 
                     .card-body
 
-                      h3= siguiendo
+                      h3.mb-1
+                        = seguidores
 
-                      p.mb-0 Siguiendo
+                      p.mb-0
+                        | Seguidores
+
+                .col-md-6.mb-3
+
+                  .card.bg-dark.text-white.border-0.shadow-sm
+
+                    .card-body
+
+                      h3.mb-1
+                        = siguiendo
+
+                      p.mb-0
+                        | Siguiendo
 
               // ======================
               // EMAIL
               // ======================
               p.text-muted.mb-2
+
                 strong Email:
                 |  #{usuario.email}
 
@@ -113,19 +122,33 @@ html
               // ======================
               if usuario.bio
 
-                .alert.alert-light.border
-                  p.mb-0= usuario.bio
+                .alert.alert-light.border.shadow-sm.mt-3
+
+                  p.mb-0
+                    = usuario.bio
 
               else
 
-                p.text-muted Sin bio
+                p.text-muted
+                  | Sin bio
 
               // ======================
               // FECHA
               // ======================
-              p.text-secondary.mt-3
+              p.text-secondary.mt-4
+
                 strong Miembro desde:
                 |  #{usuario.fechaFormateada}
+
+              // ======================
+              // ESTADO CUENTA
+              // ======================
+              if usuario.estadoCuenta == "inactiva"
+
+                .alert.alert-danger.mt-4
+
+                  strong
+                    | Cuenta inactiva
 
               // ======================
               // BOTONES
@@ -135,10 +158,10 @@ html
                 // EDITAR PERFIL
                 if usuarioLogueado && usuarioLogueado.id == usuario.id
 
-                  a.btn.btn-warning(
+                  a.btn.btn-warning.me-2(
                     href=`/perfil/${usuario.id}/editar`
                   )
-                    | Editar perfil
+                    | ✏ Editar perfil
 
                 // FOLLOW
                 if usuarioLogueado && usuarioLogueado.id != usuario.id
@@ -146,69 +169,235 @@ html
                   form(
                     action=`/perfil/${usuario.id}/follow`
                     method="POST"
+                    class="d-inline"
                   )
 
                     if yaSigue
 
-                      button.btn.btn-danger(type="submit")
+                      button.btn.btn-danger(
+                        type="submit"
+                      )
                         | Dejar de seguir
 
                     else
 
-                      button.btn.btn-primary(type="submit")
+                      button.btn.btn-primary(
+                        type="submit"
+                      )
                         | Seguir
 
           // ======================
           // PUBLICACIONES
           // ======================
-          .card.shadow-sm
+          .card.shadow-sm.border-0
 
             .card-body
 
-              h2.mb-4 Publicaciones
+              h2.mb-4
+                | Publicaciones
 
               if usuario.Publicacions && usuario.Publicacions.length > 0
 
-                .row
+                each pub in usuario.Publicacions
 
-                  each pub in usuario.Publicacions
+                  .card.mb-5.shadow-sm.border-0
 
-                    .col-md-6.mb-4
+                    .card-body
 
-                      .card.h-100.border
+                      // ======================
+                      // CABECERA
+                      // ======================
+                      .d-flex.justify-content-between.align-items-start.mb-3
 
-                        .card-body
+                        div
 
-                          // TÍTULO
-                          h4.card-title.mb-3= pub.titulo
+                          h3.mb-2
+                            = pub.titulo
 
-                          // TAGS
-                          if pub.Tags && pub.Tags.length > 0
+                          if pub.descripcion
 
-                            p
+                            p.text-muted.mb-2
+                              = pub.descripcion
 
-                              each tag in pub.Tags
+                        // ======================
+                        // BOTONES AUTOR
+                        // ======================
+                        if usuarioLogueado && usuarioLogueado.id == usuario.id
 
-                                span.badge.bg-primary.me-1
-                                  | ##{tag.nombre}
+                          .d-flex.gap-2
 
-                          // IMÁGENES
-                          if pub.Imagens && pub.Imagens.length > 0
+                            a.btn.btn-outline-warning.btn-sm(
+                              href=`/publicaciones/${pub.id}/editar`
+                            )
+                              | ✏ Editar
 
-                            each img in pub.Imagens
+                            form(
+                              action=`/publicaciones/${pub.id}/eliminar`
+                              method="POST"
+                            )
 
-                              img.img-fluid.rounded.mb-3(
-                                src=img.url
-                                style="max-height:250px; object-fit:cover;"
+                              button.btn.btn-outline-danger.btn-sm(
+                                type="submit"
+                              )
+                                | 🗑 Eliminar
+
+                      // ======================
+                      // TAGS
+                      // ======================
+                      if pub.Tags && pub.Tags.length > 0
+
+                        p.mb-3
+
+                          each tag in pub.Tags
+
+                            span.badge.bg-primary.me-1
+                              | ##{tag.nombre}
+
+                      // ======================
+                      // CARRUSEL
+                      // ======================
+                      if pub.Imagens && pub.Imagens.length > 0
+
+                        .carousel.slide.mb-4(
+                          id=`perfil-carousel-${pub.id}`
+                          data-bs-ride="false"
+                        )
+
+                          // ======================
+                          // INDICADORES
+                          // ======================
+                          .carousel-indicators
+
+                            each img, index in pub.Imagens
+
+                              button(
+                                type="button"
+                                data-bs-target=`#perfil-carousel-${pub.id}`
+                                data-bs-slide-to=index
+                                class=index == 0 ? "active" : ""
                               )
 
-                          else
+                          // ======================
+                          // IMÁGENES
+                          // ======================
+                          .carousel-inner.rounded
 
-                            p.text-muted Sin imágenes
+                            each img, index in pub.Imagens
+
+                              .carousel-item(
+                                class=index == 0 ? "active" : ""
+                              )
+
+                                .position-relative
+
+                                  img.img-fluid.w-100.rounded(
+                                    src=img.url
+                                    style="max-height:550px; object-fit:cover;"
+                                  )
+
+                                  // WATERMARK
+                                  if img.watermark
+
+                                    .position-absolute.top-50.start-50.translate-middle
+
+                                      span(style="background:rgba(0,0,0,0.35); color:white; padding:10px 20px; border-radius:10px; font-size:28px; font-weight:bold; transform:rotate(-20deg); display:inline-block;")
+                                        = img.watermark
+
+                                  // ESTADO
+                                  .position-absolute.top-0.end-0.m-3
+
+                                    span.badge.bg-dark.fs-6
+                                      = img.estado
+
+                          // ======================
+                          // CONTROLES
+                          // ======================
+                          button.carousel-control-prev(
+                            type="button"
+                            data-bs-target=`#perfil-carousel-${pub.id}`
+                            data-bs-slide="prev"
+                          )
+
+                            span.carousel-control-prev-icon
+
+                          button.carousel-control-next(
+                            type="button"
+                            data-bs-target=`#perfil-carousel-${pub.id}`
+                            data-bs-slide="next"
+                          )
+
+                            span.carousel-control-next-icon
+
+                        // ======================
+                        // INFO IMÁGENES
+                        // ======================
+                        each img in pub.Imagens
+
+                          .border-top.pt-3.mt-3
+
+                            p.mb-2
+
+                              strong Licencia:
+                              |  #{img.licencia}
+
+                            p.mb-2
+
+                              strong Estado:
+                              |  #{img.estado}
+
+                            // ======================
+                            // VALORACIONES
+                            // ======================
+                            if img.Valoracions && img.Valoracions.length > 0
+
+                              - const suma = img.Valoracions.reduce((acc, v) => acc + v.valor, 0)
+                              - const promedio = (suma / img.Valoracions.length).toFixed(1)
+
+                              p.mb-2
+
+                                strong Valoración:
+                                |  #{promedio} ⭐ (
+                                = img.Valoracions.length
+                                |  votos)
+
+                            else
+
+                              p.text-muted.mb-2
+                                | Sin valoraciones
+
+                            // ======================
+                            // COMENTARIOS
+                            // ======================
+                            h6.mt-4
+                              | Comentarios
+
+                            if img.Comentarios && img.Comentarios.length > 0
+
+                              each c in img.Comentarios
+
+                                .border-bottom.pb-2.mb-2
+
+                                  p.mb-1
+                                    = c.texto
+
+                                  small.text-muted
+                                    | por 
+                                    = c.User.username
+
+                            else
+
+                              p.text-muted
+                                | Sin comentarios
+
+                      else
+
+                        p.text-muted
+                          | Esta publicación no tiene imágenes
 
               else
 
-                p.text-muted Este usuario no tiene publicaciones
+                p.text-muted
+                  | Este usuario no tiene publicaciones
 
     script(
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"

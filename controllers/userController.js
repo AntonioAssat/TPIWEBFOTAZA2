@@ -8,6 +8,9 @@ import Notificacion from "../models/Notificacion.js";
 import Publicacion from "../models/Publicacion.js";
 import Imagen from "../models/Imagen.js";
 import Tag from "../models/Tag.js";
+import { Op } from "sequelize";
+import Comentario from "../models/Comentario.js";
+import Valoracion from "../models/Valoracion.js";
 
 const path = "./data/usuarios.json";
 
@@ -160,53 +163,200 @@ export const logout = (req, res) => {
     });
 };
 //perfil
-export const showPerfil = async (req, res) => {
-    const userId = req.params.id;
+export const showPerfil =
+async (req, res) => {
+
+    const userId =
+        req.params.id;
 
     try {
-        const usuario = await User.findByPk(req.params.id, {
 
-            include: [
+        // ======================
+        // USUARIO
+        // ======================
+        const usuario =
+            await User.findByPk(
+
+                userId,
+
                 {
-                    model: Publicacion,
 
                     include: [
+
                         {
-                            model: Imagen
-                        },
-                        {
-                            model: Tag
+                            model: Publicacion,
+
+                            include: [
+
+                                // ======================
+                                // IMÁGENES
+                                // ======================
+                                {
+                                    model: Imagen,
+
+                                    where: {
+
+                                        estado: {
+
+                                            [Op.ne]:
+                                                "eliminada"
+                                        }
+                                    },
+
+                                    required: false,
+
+                                    include: [
+
+                                        // ======================
+                                        // COMENTARIOS
+                                        // ======================
+                                        {
+                                            model:
+                                                Comentario,
+
+                                            include: [
+                                                {
+                                                    model:
+                                                        User
+                                                }
+                                            ]
+                                        },
+
+                                        // ======================
+                                        // VALORACIONES
+                                        // ======================
+                                        {
+                                            model:
+                                                Valoracion
+                                        }
+                                    ]
+                                },
+
+                                // ======================
+                                // TAGS
+                                // ======================
+                                {
+                                    model:
+                                        Tag
+                                }
+                            ],
+
+                            order: [
+                                ["createdAt", "DESC"]
+                            ]
                         }
                     ]
                 }
-            ]
-});
-        usuario.fechaFormateada = new Date(usuario.fechaRegistro)
-            .toLocaleString("es-AR", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit"
-    });
-        const seguidores = await Follow.count({
-            where: { seguido_id: userId }
-        });
+            );
 
-        const siguiendo = await Follow.count({
-            where: { seguidor_id: userId }
-        });
+        // ======================
+        // FECHA
+        // ======================
+        usuario.fechaFormateada =
+            new Date(
 
-        const yaSigue = await Follow.findOne({
-            where: {
-            seguido_id: userId,
-            seguidor_id: req.session.usuario.id
-    }
-});
-        res.render("pages/perfil", { usuario, usuarioLogueado: req.session.usuario, seguidores, siguiendo, yaSigue });
-       
+                usuario.fechaRegistro
+
+            ).toLocaleString(
+
+                "es-AR",
+
+                {
+
+                    year:
+                        "numeric",
+
+                    month:
+                        "2-digit",
+
+                    day:
+                        "2-digit"
+                }
+            );
+
+        // ======================
+        // SEGUIDORES
+        // ======================
+        const seguidores =
+            await Follow.count({
+
+                where: {
+
+                    seguido_id:
+                        userId
+                }
+            });
+
+        // ======================
+        // SIGUIENDO
+        // ======================
+        const siguiendo =
+            await Follow.count({
+
+                where: {
+
+                    seguidor_id:
+                        userId
+                }
+            });
+
+        // ======================
+        // YA SIGUE
+        // ======================
+        let yaSigue = false;
+
+        if (req.session.usuario) {
+
+            yaSigue =
+                await Follow.findOne({
+
+                    where: {
+
+                        seguido_id:
+                            userId,
+
+                        seguidor_id:
+                            req.session.usuario.id
+                    }
+                });
+        }
+        usuario.Publicacions =
+            usuario.Publicacions.filter(
+
+                pub =>
+
+                    pub.Imagens &&
+                    pub.Imagens.length > 0
+            );
+        // ======================
+        // RENDER
+        // ======================
+        res.render(
+
+            "pages/perfil",
+
+            {
+
+                usuario,
+
+                usuarioLogueado:
+                    req.session.usuario,
+
+                seguidores,
+
+                siguiendo,
+
+                yaSigue
+            }
+        );
 
     } catch (error) {
+
         console.error(error);
-        res.send("Error al cargar perfil");
+
+        res.send(
+            "Error al cargar perfil"
+        );
     }
 };
 

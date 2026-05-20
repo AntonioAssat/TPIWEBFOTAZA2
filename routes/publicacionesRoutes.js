@@ -13,7 +13,10 @@ import {
     closeComments,
     openComments,
     denunciarComentario,
-    deleteComment
+    deleteComment,
+    deletePost,
+    showEditPost,
+    editPost
 } from "../controllers/publicacionesController.js";
 import { isAuthenticated } from "../middlewares/auth.js";
 
@@ -63,6 +66,24 @@ router.post(
     "/imagenes/:id/interes",
     isAuthenticated,
     marcarInteres
+);
+//eliminar publicacion
+router.post(
+    "/publicaciones/:id/eliminar",
+    isAuthenticated,
+    deletePost
+);
+//editar publicacion
+router.get(
+    "/publicaciones/:id/editar",
+    isAuthenticated,
+    showEditPost
+);
+
+router.post(
+    "/publicaciones/:id/editar",
+    isAuthenticated,
+    editPost
 );
 
 router.post("/comentarios/:id/eliminar", isAuthenticated, deleteComment);

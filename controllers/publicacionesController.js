@@ -259,6 +259,14 @@ export const showPosts = async (req, res) => {
                 }
             });
         });
+        const publicacionesFiltradas =
+            publicaciones.filter(
+
+                pub =>
+
+                    pub.Imagens &&
+                    pub.Imagens.length > 0
+            );
         let colecciones = [];
 
         if (req.session.usuario) {
@@ -273,7 +281,7 @@ export const showPosts = async (req, res) => {
                 });
         }
         res.render("pages/posts", {
-            publicaciones,
+            publicaciones: publicacionesFiltradas,
             colecciones
         });
 
@@ -855,6 +863,15 @@ async (req, res) => {
             });
         });
 
+        const publicacionesFiltradas =
+            publicaciones.filter(
+
+                pub =>
+
+                    pub.Imagens &&
+                    pub.Imagens.length > 0
+            );
+
         // ======================
         // COLECCIONES
         // ======================
@@ -874,7 +891,7 @@ async (req, res) => {
             "pages/posts",
 
             {
-                publicaciones,
+                publicaciones: publicacionesFiltradas,
                 colecciones
             }
         );
@@ -1157,5 +1174,392 @@ async (req, res) => {
         console.error(error);
 
         res.send("Error al eliminar comentario");
+    }
+};
+
+export const deletePost =
+async (req, res) => {
+
+    const publicacionId =
+        req.params.id;
+
+    const usuarioId =
+        req.session.usuario.id;
+
+    try {
+
+        // ======================
+        // PUBLICACIÓN
+        // ======================
+        const publicacion =
+            await Publicacion.findByPk(
+
+                publicacionId,
+
+                {
+                    include: [
+                        {
+                            model: Imagen
+                        }
+                    ]
+                }
+            );
+
+        if (!publicacion) {
+
+            req.session.mensaje =
+                "Publicación no encontrada";
+
+            return res.redirect(
+                "/publicaciones"
+            );
+        }
+
+        // ======================
+        // SOLO AUTOR
+        // ======================
+        if (
+            publicacion.usuario_id !=
+            usuarioId
+        ) {
+
+            req.session.mensaje =
+                "No autorizado";
+
+            return res.redirect(
+                "/publicaciones"
+            );
+        }
+
+        // ======================
+        // BLOQUEAR SI HAY REVISIÓN
+        // ======================
+        const enRevision =
+            publicacion.Imagens.some(
+
+                img =>
+                    img.estado ===
+                    "en_revision"
+            );
+
+        if (enRevision) {
+
+            req.session.mensaje =
+                "No podés eliminar una publicación en revisión";
+
+            return res.redirect(
+                `/perfil/${usuarioId}`
+            );
+        }
+
+        // ======================
+        // ELIMINAR IMÁGENES
+        // ======================
+        for (
+            const img
+            of publicacion.Imagens
+        ) {
+
+            img.estado =
+                "eliminada";
+
+            await img.save();
+        }
+
+        req.session.mensaje =
+            "Publicación eliminada correctamente";
+
+        res.redirect(
+            `/perfil/${usuarioId}`
+        );
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.send(
+            "Error al eliminar publicación"
+        );
+    }
+};
+
+//editar post
+export const showEditPost =
+async (req, res) => {
+
+    const publicacionId =
+        req.params.id;
+
+    const usuarioId =
+        req.session.usuario.id;
+
+    try {
+
+        // ======================
+        // PUBLICACIÓN
+        // ======================
+        const publicacion =
+            await Publicacion.findByPk(
+
+                publicacionId,
+
+                {
+
+                    include: [
+
+                        {
+                            model: Imagen
+                        },
+
+                        {
+                            model: Tag
+                        }
+                    ]
+                }
+            );
+
+        if (!publicacion) {
+
+            req.session.mensaje =
+                "Publicación no encontrada";
+
+            return res.redirect(
+                `/perfil/${usuarioId}`
+            );
+        }
+
+        // ======================
+        // SOLO AUTOR
+        // ======================
+        if (
+            publicacion.usuario_id !=
+            usuarioId
+        ) {
+
+            req.session.mensaje =
+                "No autorizado";
+
+            return res.redirect(
+                `/perfil/${usuarioId}`
+            );
+        }
+
+        // ======================
+        // BLOQUEAR REVISIÓN
+        // ======================
+        const enRevision =
+            publicacion.Imagens.some(
+
+                img =>
+                    img.estado ===
+                    "en_revision"
+            );
+
+        if (enRevision) {
+
+            req.session.mensaje =
+                "No podés editar publicaciones en revisión";
+
+            return res.redirect(
+                `/perfil/${usuarioId}`
+            );
+        }
+
+        // ======================
+        // TAGS STRING
+        // ======================
+        const tagsString =
+            publicacion.Tags.map(
+
+                t => t.nombre
+
+            ).join(", ");
+
+        // ======================
+        // RENDER
+        // ======================
+        res.render(
+
+            "pages/editPost",
+
+            {
+
+                publicacion,
+
+                tagsString
+            }
+        );
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.send(
+            "Error al cargar edición"
+        );
+    }
+};
+ 
+//editat post
+export const editPost =
+async (req, res) => {
+
+    const publicacionId =
+        req.params.id;
+
+    const usuarioId =
+        req.session.usuario.id;
+
+    const {
+        titulo,
+        descripcion,
+        tags
+    } = req.body;
+
+    try {
+
+        // ======================
+        // PUBLICACIÓN
+        // ======================
+        const publicacion =
+            await Publicacion.findByPk(
+
+                publicacionId,
+
+                {
+
+                    include: [
+
+                        {
+                            model: Imagen
+                        },
+
+                        {
+                            model: Tag
+                        }
+                    ]
+                }
+            );
+
+        if (!publicacion) {
+
+            req.session.mensaje =
+                "Publicación no encontrada";
+
+            return res.redirect(
+                `/perfil/${usuarioId}`
+            );
+        }
+
+        // ======================
+        // SOLO AUTOR
+        // ======================
+        if (
+            publicacion.usuario_id !=
+            usuarioId
+        ) {
+
+            req.session.mensaje =
+                "No autorizado";
+
+            return res.redirect(
+                `/perfil/${usuarioId}`
+            );
+        }
+
+        // ======================
+        // BLOQUEAR REVISIÓN
+        // ======================
+        const enRevision =
+            publicacion.Imagens.some(
+
+                img =>
+                    img.estado ===
+                    "en_revision"
+            );
+
+        if (enRevision) {
+
+            req.session.mensaje =
+                "No podés editar publicaciones en revisión";
+
+            return res.redirect(
+                `/perfil/${usuarioId}`
+            );
+        }
+
+        // ======================
+        // ACTUALIZAR
+        // ======================
+        publicacion.titulo =
+            titulo;
+
+        publicacion.descripcion =
+            descripcion;
+
+        await publicacion.save();
+
+        // ======================
+        // TAGS
+        // ======================
+        const nuevosTags = [];
+
+        if (tags && tags.trim() !== "") {
+
+            const listaTags =
+                tags.split(",");
+
+            for (let nombreTag of listaTags) {
+
+                nombreTag =
+                    nombreTag
+                    .trim()
+                    .toLowerCase();
+
+                let tag =
+                    await Tag.findOne({
+
+                        where: {
+
+                            nombre:
+                                nombreTag
+                        }
+                    });
+
+                if (!tag) {
+
+                    tag =
+                        await Tag.create({
+
+                            nombre:
+                                nombreTag
+                        });
+                }
+
+                nuevosTags.push(tag);
+            }
+        }
+
+        // ======================
+        // REEMPLAZAR TAGS
+        // ======================
+        await publicacion.setTags(
+            nuevosTags
+        );
+
+        req.session.mensaje =
+            "Publicación actualizada correctamente";
+
+        res.redirect(
+            `/perfil/${usuarioId}`
+        );
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.send(
+            "Error al editar publicación"
+        );
     }
 };
