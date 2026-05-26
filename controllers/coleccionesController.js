@@ -32,9 +32,7 @@ async (req, res) => {
                     }
                 ],
 
-                order: [
-                    ["createdAt", "DESC"]
-                ]
+                
             });
 
         res.render(
@@ -50,9 +48,11 @@ async (req, res) => {
 
         console.error(error);
 
-        res.send(
-            "Error al cargar colecciones"
-        );
+        res.status(500).render("pages/error",{
+            codigo: "500",
+            mensaje:"Error al cargar colecciones",
+            descripcion:"Intentá nuevamente más tarde."
+        });
     }
 };
 
@@ -81,9 +81,11 @@ async (req, res) => {
 
         console.error(error);
 
-        res.send(
-            "Error al crear colección"
-        );
+        res.status(500).render("pages/error",{
+            codigo: "500",
+            mensaje:"Error al crear coleccion",
+            descripcion:"Intentá nuevamente más tarde."
+        });
     }
 };
 
@@ -162,9 +164,11 @@ async (req, res) => {
 
         console.error(error);
 
-        res.send(
-            "Error al guardar publicación"
-        );
+        res.status(500).render("pages/error",{
+            codigo: "500",
+            mensaje:"Error al guardar publicacion",
+            descripcion:"Intentá nuevamente más tarde."
+        });
     }
 };
 
@@ -316,8 +320,10 @@ async (req, res) => {
 
         console.error(error);
 
-        res.send(
-            "Error al cargar colección"
-        );
+        res.status(500).render("pages/error",{
+            codigo: "500",
+            mensaje:"Error al cargar coleccion",
+            descripcion:"Intentá nuevamente más tarde."
+        });
     }
 };

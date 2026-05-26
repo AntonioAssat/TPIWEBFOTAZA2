@@ -1,7 +1,9 @@
-import { DataTypes } from "sequelize";
+import { DataTypes, Model } from "sequelize";
 import sequelize from "../config/database.js";
 
-const Imagen = sequelize.define("Imagen", {
+class Imagen extends Model {}
+
+Imagen.init({
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
@@ -18,13 +20,18 @@ const Imagen = sequelize.define("Imagen", {
         type: DataTypes.STRING,
     },
     estado: {
-    type: DataTypes.STRING,
-    defaultValue: "activa"
+        type: DataTypes.STRING,
+        defaultValue: "activa"
     },
     comentarios_cerrados: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: false
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
     }
+}, {
+    sequelize,
+    modelName: "Imagen",
+    tableName: "Imagens",
+    timestamps: false
 });
 
 export default Imagen;

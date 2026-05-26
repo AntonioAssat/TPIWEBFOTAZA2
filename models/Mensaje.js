@@ -1,21 +1,23 @@
-import { DataTypes } from "sequelize";
-
+import { DataTypes, Model } from "sequelize";
 import sequelize from "../config/database.js";
 
-const Mensaje = sequelize.define(
-    "Mensaje",
-    {
+class Mensaje extends Model {}
 
-        texto: {
-            type: DataTypes.TEXT,
-            allowNull: false
-        }
+Mensaje.init({
+    texto: {
+        type: DataTypes.TEXT,
+        allowNull: false
     }
-);
+}, {
+    sequelize,
+    modelName: "Mensaje",
+    tableName: "Mensajes",
+    timestamps: false
+});
 
 export default Mensaje;
-// Relaciones
 
+// relaciones
 import User from "./User.js";
 
 // usuario emisor

@@ -1,7 +1,9 @@
-import { DataTypes } from "sequelize";
+import { DataTypes, Model } from "sequelize";
 import sequelize from "../config/database.js";
 
-const Valoracion = sequelize.define("Valoracion", {
+class Valoracion extends Model {}
+
+Valoracion.init({
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
@@ -11,14 +13,19 @@ const Valoracion = sequelize.define("Valoracion", {
         type: DataTypes.INTEGER,
         allowNull: false,
     }
+}, {
+    sequelize,
+    modelName: "Valoracion",
+    tableName: "Valoracions",
+    timestamps: false
 });
 
 export default Valoracion;
-//relaciones
+
+// relaciones
 import User from "./User.js";
 import Imagen from "./Imagen.js";
 
-// Usuario → valoraciones
 Valoracion.belongsTo(User, {
     foreignKey: "usuario_id"
 });
@@ -27,7 +34,6 @@ User.hasMany(Valoracion, {
     foreignKey: "usuario_id"
 });
 
-// Imagen → valoraciones
 Valoracion.belongsTo(Imagen, {
     foreignKey: "imagen_id"
 });

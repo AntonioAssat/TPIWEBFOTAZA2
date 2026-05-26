@@ -1,7 +1,9 @@
-import { DataTypes } from "sequelize";
+import { DataTypes, Model } from "sequelize";
 import sequelize from "../config/database.js";
 
-const Comentario = sequelize.define("Comentario", {
+class Comentario extends Model {}
+
+Comentario.init({
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
@@ -11,14 +13,19 @@ const Comentario = sequelize.define("Comentario", {
         type: DataTypes.TEXT,
         allowNull: false,
     }
+}, {
+    sequelize,
+    modelName: "Comentario",
+    tableName: "Comentarios",
+    timestamps: false
 });
 
 export default Comentario;
-//relaciones
+
+// relaciones
 import User from "./User.js";
 import Imagen from "./Imagen.js";
 
-// Un comentario pertenece a un usuario
 Comentario.belongsTo(User, {
     foreignKey: "usuario_id"
 });
@@ -27,7 +34,6 @@ User.hasMany(Comentario, {
     foreignKey: "usuario_id"
 });
 
-// Un comentario pertenece a una imagen
 Comentario.belongsTo(Imagen, {
     foreignKey: "imagen_id"
 });

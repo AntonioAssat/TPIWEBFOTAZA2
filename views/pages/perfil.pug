@@ -80,6 +80,17 @@ html
               h1.mb-3
                 = usuario.username
 
+              if mensaje
+
+                .alert.alert-success
+
+                  = mensaje
+
+              if error
+
+                .alert.alert-danger
+
+                  = error
               // ======================
               // ESTADÍSTICAS
               // ======================

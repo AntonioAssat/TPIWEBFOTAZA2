@@ -1,30 +1,29 @@
-import { DataTypes } from "sequelize";
-
+import { DataTypes, Model } from "sequelize";
 import sequelize from "../config/database.js";
 
-const Coleccion = sequelize.define(
-    "Coleccion",
-    {
+class Coleccion extends Model {}
 
-        id: {
-            type: DataTypes.INTEGER,
-            autoIncrement: true,
-            primaryKey: true
-        },
-
-        nombre: {
-            type: DataTypes.STRING,
-            allowNull: false
-        }
+Coleccion.init({
+    id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true
+    },
+    nombre: {
+        type: DataTypes.STRING,
+        allowNull: false
     }
-);
+}, {
+    sequelize,
+    modelName: "Coleccion",
+    tableName: "Coleccions",
+    timestamps: false
+});
 
 export default Coleccion;
 
-// Relaciones
-
+// relaciones
 import User from "./User.js";
-
 import Publicacion from "./Publicacion.js";
 
 // usuario
@@ -37,18 +36,12 @@ Coleccion.belongsTo(User, {
 });
 
 // muchas a muchas publicaciones
-Coleccion.belongsToMany(
-    Publicacion,
-    {
-        through: "ColeccionPublicaciones",
-        foreignKey: "coleccion_id"
-    }
-);
+Coleccion.belongsToMany(Publicacion, {
+    through: "ColeccionPublicaciones",
+    foreignKey: "coleccion_id"
+});
 
-Publicacion.belongsToMany(
-    Coleccion,
-    {
-        through: "ColeccionPublicaciones",
-        foreignKey: "publicacion_id"
-    }
-);
+Publicacion.belongsToMany(Coleccion, {
+    through: "ColeccionPublicaciones",
+    foreignKey: "publicacion_id"
+});

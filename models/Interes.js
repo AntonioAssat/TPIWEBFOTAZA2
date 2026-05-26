@@ -1,22 +1,25 @@
-import { DataTypes } from "sequelize";
-
+import { DataTypes, Model } from "sequelize";
 import sequelize from "../config/database.js";
 
-const Interes = sequelize.define("Interes", {
+class Interes extends Model {}
 
+Interes.init({
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
         primaryKey: true
     }
-
+}, {
+    sequelize,
+    modelName: "Interes",
+    tableName: "Intereses",
+    timestamps: false
 });
 
 export default Interes;
-// Relaciones
 
+// relaciones
 import User from "./User.js";
-
 import Imagen from "./Imagen.js";
 
 // usuario interesado

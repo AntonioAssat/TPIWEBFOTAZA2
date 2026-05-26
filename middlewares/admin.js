@@ -5,8 +5,17 @@ export const isAdmin = (req, res, next) => {
         req.session.usuario.rol != "admin"
     ) {
 
-        return res.send(
-            "Acceso denegado"
+        return res.status(403).render(
+            "pages/error",
+            {
+                codigo: "403",
+
+                mensaje:
+                    "Acceso denegado",
+
+                descripcion:
+                    "No tenés permisos para acceder."
+            }
         );
     }
 

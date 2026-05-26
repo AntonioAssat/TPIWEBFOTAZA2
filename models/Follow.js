@@ -1,16 +1,24 @@
-import { DataTypes } from "sequelize";
+import { DataTypes, Model } from "sequelize";
 import sequelize from "../config/database.js";
 
-const Follow = sequelize.define("Follow", {
+class Follow extends Model {}
+
+Follow.init({
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
         primaryKey: true,
     }
+}, {
+    sequelize,
+    modelName: "Follow",
+    tableName: "Follows",
+    timestamps: false
 });
 
 export default Follow;
-// Relaciones
+
+// relaciones
 import User from "./User.js";
 
 User.belongsToMany(User, {

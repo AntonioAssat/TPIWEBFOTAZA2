@@ -14,12 +14,20 @@ import Conversacion from "../models/Conversacion.js";
 import Coleccion from "../models/Coleccion.js";
 import DenunciaComentario from "../models/DenunciaComentario.js";
 import { Op } from "sequelize";
-
+import {
+    isRequired
+}
+from "../helpers/validations.js";
 
 // Mostrar formulario
-export const showCreatePost = (req, res) => {
-    res.render("pages/createPost");
-};
+export const showCreatePost =(req, res) => {
+
+        const error = req.query.error || null;
+
+        res.render("pages/createPost",{
+                error
+            });
+    };
 
 // Crear publicación
 export const createPost = async (req, res) => {
@@ -37,7 +45,25 @@ export const createPost = async (req, res) => {
         req.session.usuario.id;
 
     try {
+            if (!isRequired(titulo)) {
+                return res.redirect(
+                    "/publicaciones/nueva?error=El título es obligatorio"
+            );
+            }
 
+            if (titulo.length < 3) {
+
+                return res.redirect(
+                    "/publicaciones/nueva?error=El título debe tener al menos 3 caracteres"
+                );
+            }
+
+            if (!imagenesBase64) {
+
+                return res.redirect(
+                    "/publicaciones/nueva?error=Debés subir al menos una imagen"
+                );
+            }
         // ======================
         // CREAR PUBLICACIÓN
         // ======================
@@ -139,9 +165,11 @@ export const createPost = async (req, res) => {
 
         console.error(error);
 
-        res.send(
-            "Error al crear publicación"
-        );
+        res.status(500).render("pages/error",{
+        codigo: "500",
+        mensaje:"Error al cargar perfil",
+        descripcion:"Intentá nuevamente más tarde."
+        });
     }
 };
 //mostrar las publicaciones mas usuario
@@ -150,7 +178,7 @@ export const showPosts = async (req, res) => {
     try {
         // BUSCADOR
         const search = req.query.search || "";
-
+        const error =req.query.error || null;
         const publicaciones = await Publicacion.findAll({
 
             where: {
@@ -237,25 +265,63 @@ export const showPosts = async (req, res) => {
             ]
         });
 
-        // PROMEDIO VALORACIONES
+        // PREPARAR DATOS PARA LA VISTA
         publicaciones.forEach(pub => {
 
             pub.Imagens.forEach(img => {
 
-                if (img.Valoracions && img.Valoracions.length > 0) {
+                // promedio valoraciones
+                if (
+                    img.Valoracions &&
+                    img.Valoracions.length > 0
+                ) {
 
-                    const suma = img.Valoracions.reduce(
-                        (acc, v) => acc + v.valor,
-                        0
-                    );
+                    const suma =
+                        img.Valoracions.reduce(
+                            (acc, v) =>
+                                acc + v.valor,
+                            0
+                        );
 
                     img.promedio = (
-                        suma / img.Valoracions.length
+                        suma /
+                        img.Valoracions.length
                     ).toFixed(1);
 
                 } else {
-
                     img.promedio = 0;
+                }
+                img.tieneValoraciones =img.Valoracions && img.Valoracions.length > 0;
+                img.tieneComentarios =img.Comentarios && img.Comentarios.length > 0;
+                img.estaEnRevision =img.estado == "en_revision";
+                img.esCopyright =img.licencia == "copyright";
+                img.esAutor =req.session.usuario && pub.User && req.session.usuario.id == pub.User.id;
+                img.puedeCerrarComentarios = img.esAutor && !img.comentarios_cerrados;
+                img.puedeAbrirComentarios =img.esAutor && img.comentarios_cerrados;
+                img.usuarioLogueado =!!req.session.usuario;
+                img.puedeDenunciarImagen =img.usuarioLogueado && !img.esAutor;
+                // puede valorar
+                img.puedeValorar =
+                    req.session.usuario &&
+                    req.session.usuario.id !==
+                    pub.usuario_id;
+
+                // comentarios abiertos
+                img.puedeComentar =
+                    !img.comentarios_cerrados;
+
+                // preparar comentarios
+                if (
+                    img.Comentarios
+                ) {
+
+                    img.Comentarios.forEach(c => {
+
+                        c.puedeDenunciar =
+                            req.session.usuario &&
+                            req.session.usuario.id !==
+                            c.usuario_id;
+                    });
                 }
             });
         });
@@ -281,15 +347,20 @@ export const showPosts = async (req, res) => {
                 });
         }
         res.render("pages/posts", {
-            publicaciones: publicacionesFiltradas,
-            colecciones
+            publicaciones:publicacionesFiltradas,
+            colecciones,
+            error
         });
 
     } catch (error) {
 
         console.error(error);
 
-        res.send("Error al cargar publicaciones");
+        res.status(500).render("pages/error", {
+            codigo: "500",
+            mensaje: "Error al cargar publicaciones",
+            descripcion: "Intentá nuevamente más tarde."
+        });
     }
 };
 
@@ -312,11 +383,15 @@ export const addImage = async (req, res) => {
             publicacion_id: publicacionId
         });
 
-        res.send("Imagen guardada con Sequelize");
+        res.redirect("/publicaciones?mensaje=Imagen agregada correctamente");
 
     } catch (error) {
         console.error(error);
-        res.send("Error al guardar imagen");
+        res.status(500).render("pages/error",{
+        codigo: "500",
+        mensaje:"Error al guardar imagen",
+        descripcion:"Intentá nuevamente más tarde."
+    });
     }
 };
 //comentarios
@@ -332,7 +407,19 @@ export const addComment = async (req, res) => {
         req.session.usuario.id;
 
     try {
+                    if (!isRequired(texto)) {
 
+                        return res.redirect(
+                            "/publicaciones?error=El comentario no puede estar vacío"
+                        );
+                    }
+
+                    if (texto.length > 300) {
+
+                        return res.redirect(
+                            "/publicaciones?error=Máximo 300 caracteres"
+                        );
+                    }
         
         // Buscar imagen de la publicación
    
@@ -343,9 +430,11 @@ export const addComment = async (req, res) => {
 
         if (!imagen) {
 
-            return res.send(
-                "Imagen no encontrada"
-            );
+            res.status(404).render("pages/error",{
+                codigo: "404",
+                mensaje:"Imagen no encontrada",
+                descripcion:"La imagen no existe."
+            });
         }
 
       
@@ -355,8 +444,8 @@ export const addComment = async (req, res) => {
             imagen.comentarios_cerrados
         ) {
 
-            return res.send(
-                "Los comentarios están cerrados"
+            return res.redirect(
+                "/publicaciones?error=Los comentarios están cerrados"
             );
         }
 
@@ -412,9 +501,11 @@ export const addComment = async (req, res) => {
 
         console.error(error);
 
-        res.send(
-            "Error al comentar"
-        );
+        res.status(500).render("pages/error",{
+        codigo: "500",
+        mensaje:"Error al guardar comentario",
+        descripcion:"Intentá nuevamente más tarde."
+    });
     }
 };
 //cerrar comentarios
@@ -437,9 +528,12 @@ export const closeComments = async (req, res) => {
 
         if (!imagen) {
 
-            return res.send(
-                "Imagen no encontrada"
-            );
+            res.status(404).render("pages/error",{
+                codigo: "404",
+                mensaje:"Imagen no encontrada",
+                descripcion:"La imagen no existe."
+                }
+);
         }
 
         // Publicación
@@ -451,14 +545,8 @@ export const closeComments = async (req, res) => {
 
         // Solo el autor puede cerrar comentarios
 
-        if (
-            publicacion.usuario_id !=
-            usuarioId
-        ) {
-
-            return res.send(
-                "No autorizado"
-            );
+        if (publicacion.usuario_id != usuarioId) {
+            return res.redirect("/publicaciones?error=No autorizado");
         }
 
         // Cerrar comentarios
@@ -476,9 +564,11 @@ export const closeComments = async (req, res) => {
 
         console.error(error);
 
-        res.send(
-            "Error al cerrar comentarios"
-        );
+        res.status(500).render("pages/error",{
+        codigo: "500",
+        mensaje:"Error al cerrar comentario",
+        descripcion:"Intentá nuevamente más tarde."
+    });
     }
 };
 //abrir comentarios
@@ -498,10 +588,12 @@ export const openComments = async (req, res) => {
             );
 
         if (!imagen) {
-
-            return res.send(
-                "Imagen no encontrada"
-            );
+            res.status(404).render("pages/error",{
+                codigo: "404",
+                mensaje:"Publicación no encontrada",
+                descripcion:"La publicación no existe."
+    }
+);
         }
 
         const publicacion =
@@ -510,14 +602,8 @@ export const openComments = async (req, res) => {
             );
 
         // solo autor
-        if (
-            publicacion.usuario_id !=
-            usuarioId
-        ) {
-
-            return res.send(
-                "No autorizado"
-            );
+        if (publicacion.usuario_id !=usuarioId) {
+            return res.redirect("/publicaciones?error=No autorizado");
         }
 
         imagen.comentarios_cerrados =
@@ -532,10 +618,12 @@ export const openComments = async (req, res) => {
     } catch (error) {
 
         console.error(error);
-
-        res.send(
-            "Error al abrir comentarios"
-        );
+        res.status(500).render("pages/error",{
+        codigo: "500",
+        mensaje:"Error al abrir comentarios",
+        descripcion:"Intentá nuevamente más tarde."
+        });
+        
     }
 };
 
@@ -561,9 +649,12 @@ export const addRating = async (req, res) => {
 
         if (!imagen) {
 
-            return res.send(
-                "Imagen no encontrada"
-            );
+            res.status(404).render("pages/error",{
+                codigo: "404",
+                mensaje: "Imagen no encontrada",
+                descripcion:"La publicación no existe."
+    }
+);
         }
 
         // Buscar publicación
@@ -575,10 +666,7 @@ export const addRating = async (req, res) => {
 
         // Bloquear si es propia
  
-        if (
-            publicacion.usuario_id ==
-            usuarioId
-        ) {
+        if (publicacion.usuario_id == usuarioId) {
 
             req.session.mensaje =
                 "No podés valorar tu propia imagen";
@@ -654,10 +742,11 @@ export const addRating = async (req, res) => {
     } catch (error) {
 
         console.error(error);
-
-        res.send(
-            "Error al valorar"
-        );
+        res.status(500).render("pages/error",{
+            codigo: "500",
+            mensaje:"Error al valorizar",
+            descripcion:"Intentá nuevamente más tarde."
+        });
     }
 };
 //denuncias
@@ -738,7 +827,11 @@ export const addDenuncia = async (req, res) => {
 
     } catch (error) {
         console.error(error);
-        res.send("Error al denunciar");
+        res.status(500).render("pages/error",{
+            codigo: "500",
+            mensaje:"Error al agregar denuncia",
+            descripcion:"Intentá nuevamente más tarde."
+        });
     }
 };
 //mostrar feed de seguidos
@@ -824,9 +917,7 @@ async (req, res) => {
                     }
                 ],
 
-                order: [
-                    ["createdAt", "DESC"]
-                ]
+                order: [["fecha", "DESC"]]
             });
 
         // ======================
@@ -899,10 +990,11 @@ async (req, res) => {
     } catch (error) {
 
         console.error(error);
-
-        res.send(
-            "Error al cargar feed"
-        );
+        res.status(500).render("pages/error",{
+            codigo: "500",
+            mensaje:"Error al mostrar feed seguidos",
+            descripcion:"Intentá nuevamente más tarde."
+        });
     }
 };
 //marcar el interes en la imagen
@@ -927,8 +1019,12 @@ export const marcarInteres = async (req, res) => {
         );
 
         if (!imagen) {
-
-            return res.send("Imagen no encontrada");
+            res.status(404).render("pages/error",{
+            codigo: "404",
+            mensaje:"Imagen no encontrada",
+            descripcion:"La imagen no existe."
+    });
+            
         }
         // EVITAR DUPLICADOS
         const existe = await Interes.findOne({
@@ -1012,8 +1108,11 @@ export const marcarInteres = async (req, res) => {
     } catch (error) {
 
         console.error(error);
-
-        res.send("Error al marcar interés");
+        res.status(500).render("pages/error",{
+            codigo: "500",
+            mensaje:"Error al marcar interes",
+            descripcion:"Intentá nuevamente más tarde."
+        });
     }
 };
 
@@ -1082,8 +1181,11 @@ export const denunciarComentario = async (req, res) => {
     } catch (error) {
 
         console.error(error);
-
-        res.send("Error al denunciar comentario");
+        res.status(500).render("pages/error",{
+            codigo: "500",
+            mensaje:"Error al denunciar comentario",
+            descripcion:"Intentá nuevamente más tarde."
+        });
     }
 };
 //eliminar comentario (solo autor de la publicación)
@@ -1173,7 +1275,11 @@ async (req, res) => {
 
         console.error(error);
 
-        res.send("Error al eliminar comentario");
+        res.status(500).render("pages/error",{
+            codigo: "500",
+            mensaje:"Error aleliminar comentario",
+            descripcion:"Intentá nuevamente más tarde."
+        });
     }
 };
 
@@ -1276,10 +1382,11 @@ async (req, res) => {
     } catch (error) {
 
         console.error(error);
-
-        res.send(
-            "Error al eliminar publicación"
-        );
+        res.status(500).render("pages/error",{
+            codigo: "500",
+            mensaje:"Error al eliminar publicacion",
+            descripcion:"Intentá nuevamente más tarde."
+        });
     }
 };
 
@@ -1320,27 +1427,17 @@ async (req, res) => {
 
         if (!publicacion) {
 
-            req.session.mensaje =
-                "Publicación no encontrada";
-
             return res.redirect(
-                `/perfil/${usuarioId}`
+                `/perfil/${usuarioId}?error=Publicación no encontrada`
             );
         }
 
         // ======================
         // SOLO AUTOR
         // ======================
-        if (
-            publicacion.usuario_id !=
-            usuarioId
-        ) {
-
-            req.session.mensaje =
-                "No autorizado";
-
+        if ( publicacion.usuario_id != usuarioId) {
             return res.redirect(
-                `/perfil/${usuarioId}`
+                `/perfil/${usuarioId}?error=No autorizado`
             );
         }
 
@@ -1356,12 +1453,8 @@ async (req, res) => {
             );
 
         if (enRevision) {
-
-            req.session.mensaje =
-                "No podés editar publicaciones en revisión";
-
             return res.redirect(
-                `/perfil/${usuarioId}`
+                `/perfil/${usuarioId}?error=No podés editar publicaciones en revisión`
             );
         }
 
@@ -1378,25 +1471,23 @@ async (req, res) => {
         // ======================
         // RENDER
         // ======================
-        res.render(
+        const error =req.query.error || null;
 
-            "pages/editPost",
-
-            {
-
-                publicacion,
-
-                tagsString
+        res.render("pages/editPost",{
+            publicacion,
+            tagsString,
+            error
             }
         );
 
     } catch (error) {
 
         console.error(error);
-
-        res.send(
-            "Error al cargar edición"
-        );
+        res.status(500).render("pages/error",{
+            codigo: "500",
+            mensaje:"Error al cargar edicion",
+            descripcion:"Intentá nuevamente más tarde."
+        });
     }
 };
  
@@ -1417,12 +1508,23 @@ async (req, res) => {
     } = req.body;
 
     try {
+            if (!isRequired(titulo)) {
 
+                return res.redirect(
+                    `/publicaciones/${publicacionId}/editar?error=El título es obligatorio`
+                );
+            }
+
+            if (titulo.length < 3) {
+
+                return res.redirect(
+                    `/publicaciones/${publicacionId}/editar?error=El título debe tener al menos 3 caracteres`
+                );
+            }
         // ======================
         // PUBLICACIÓN
         // ======================
-        const publicacion =
-            await Publicacion.findByPk(
+        const publicacion =await Publicacion.findByPk(
 
                 publicacionId,
 
@@ -1442,28 +1544,17 @@ async (req, res) => {
             );
 
         if (!publicacion) {
-
-            req.session.mensaje =
-                "Publicación no encontrada";
-
             return res.redirect(
-                `/perfil/${usuarioId}`
+                `/perfil/${usuarioId}?error=Publicación no encontrada`
             );
         }
 
         // ======================
         // SOLO AUTOR
         // ======================
-        if (
-            publicacion.usuario_id !=
-            usuarioId
-        ) {
-
-            req.session.mensaje =
-                "No autorizado";
-
+        if (publicacion.usuario_id != usuarioId) {
             return res.redirect(
-                `/perfil/${usuarioId}`
+                `/perfil/${usuarioId}?error=No autorizado`
             );
         }
 
@@ -1479,12 +1570,8 @@ async (req, res) => {
             );
 
         if (enRevision) {
-
-            req.session.mensaje =
-                "No podés editar publicaciones en revisión";
-
             return res.redirect(
-                `/perfil/${usuarioId}`
+                `/perfil/${usuarioId}?error=No podés editar publicaciones en revisión`
             );
         }
 
@@ -1547,19 +1634,17 @@ async (req, res) => {
             nuevosTags
         );
 
-        req.session.mensaje =
-            "Publicación actualizada correctamente";
-
         res.redirect(
-            `/perfil/${usuarioId}`
+            `/perfil/${usuarioId}?mensaje=Publicación actualizada correctamente`
         );
 
     } catch (error) {
 
         console.error(error);
-
-        res.send(
-            "Error al editar publicación"
-        );
+        res.status(500).render("pages/error",{
+            codigo: "500",
+            mensaje:"Error al editar publicacion",
+            descripcion:"Intentá nuevamente más tarde."
+        });
     }
 };

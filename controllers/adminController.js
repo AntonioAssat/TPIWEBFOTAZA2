@@ -41,9 +41,11 @@ async (req, res) => {
 
         console.error(error);
 
-        res.send(
-            "Error al cargar denuncias"
-        );
+        res.status(500).render("pages/error",{
+            codigo: "500",
+            mensaje:"Error al cargar denuncias",
+            descripcion:"Intentá nuevamente más tarde."
+        });
     }
 };
 
@@ -82,9 +84,11 @@ async (req, res) => {
 
         console.error(error);
 
-        res.send(
-            "Error al aprobar imagen"
-        );
+        res.status(500).render("pages/error",{
+            codigo: "500",
+            mensaje:"Error al aprobar imagen",
+            descripcion:"Intentá nuevamente más tarde."
+        });
     }
 };
 
@@ -177,8 +181,10 @@ async (req, res) => {
 
         console.error(error);
 
-        res.send(
-            "Error al eliminar imagen"
-        );
+        res.status(500).render("pages/error",{
+            codigo: "500",
+            mensaje:"Error al eliminar imagen",
+            descripcion:"Intentá nuevamente más tarde."
+        });
     }
 };

@@ -11,6 +11,13 @@ import Tag from "../models/Tag.js";
 import { Op } from "sequelize";
 import Comentario from "../models/Comentario.js";
 import Valoracion from "../models/Valoracion.js";
+import {
+    isEmail,
+    isRequired,
+    isPasswordValid,
+    passwordsMatch
+}
+from "../helpers/validations.js";
 
 const path = "./data/usuarios.json";
 
@@ -28,10 +35,47 @@ export const registerUser = async (req, res) => {
     const { username, email, password, confirmPassword } = req.body;
 
     try {
+                if (
+            !isRequired(username) ||
+            !isRequired(email) ||
+            !isRequired(password) ||
+            !isRequired(confirmPassword)
+        ) {
+
+            return res.render("pages/register",{
+                    error:"Completá todos los campos"
+                }
+            );
+        }
+
+        if (!isEmail(email)) {
+            return res.render("pages/register",{
+                    error:"Ingresá un email válido"
+                }
+            );
+        }
+
+        if (!isPasswordValid(password)) {
+
+            return res.render("pages/register",{
+                    error:"La contraseña debe tener al menos 6 caracteres"
+                }
+            );
+        }
+
+        if (!passwordsMatch(
+                password,
+                confirmPassword
+            )
+        ) {
+
+            return res.render("pages/register",{
+                    error:"Las contraseñas no coinciden"
+                }
+            );
+        }
         //Encriptar contraseña
-        if (password !== confirmPassword) {
-       return res.send("Las contraseñas no coinciden");
-       }
+        
         const hashedPassword = await bcrypt.hash(password, 10);
 
         //Verificar si existe usuario
@@ -40,7 +84,9 @@ export const registerUser = async (req, res) => {
         });
 
         if (existingUser) {
-            return res.send("El usuario ya existe");
+            return res.render("pages/register",{
+                error:"El usuario ya existe"
+        });
         }
 
         //Crear usuario
@@ -54,7 +100,11 @@ export const registerUser = async (req, res) => {
 
     } catch (error) {
         console.error(error);
-        res.send("Error al registrar usuario");
+        res.status(500).render("pages/error",{
+            codigo: "500",
+            mensaje:"Error al registar usuario",
+            descripcion:"Intentá nuevamente más tarde."
+        });
     }
 };
 //procesar login
@@ -63,7 +113,24 @@ export const loginUser = async (req, res) => {
     const {email, password} = req.body;
 
     try {
+        if (
+            !isRequired(email) ||
+            !isRequired(password)
+        ) {
 
+            return res.render("pages/login",{
+                    error:"Completá todos los campos"
+                }
+            );
+        }
+
+        if (!isEmail(email)) {
+
+            return res.render("pages/login",{
+                    error:"Ingresá un email válido"
+                }
+            );
+        }
         // Buscar usuario por email
     
         const usuario = await User.findOne({
@@ -73,23 +140,19 @@ export const loginUser = async (req, res) => {
         // No existe usuario
 
         if (!usuario) {
-
-            req.session.mensaje ="Usuario no encontrado";
-
-            return res.redirect("/login");
+            return res.render("pages/login",{
+                error:"Usuario no encontrado"
+            }
+        );
         }
 
         // Cuenta inactiva
        
-        if (
-            usuario.estadoCuenta ===
-            "inactiva"
-        ) {
-
-            req.session.mensaje =
-                "Tu cuenta fue desactivada por múltiples publicaciones eliminadas";
-
-            return res.redirect("/login");
+        if (usuario.estadoCuenta ==="inactiva") {
+            return res.render("pages/login",{
+                    error:"Tu cuenta fue desactivada"
+                }
+            );
         }
 
         // ======================
@@ -97,9 +160,7 @@ export const loginUser = async (req, res) => {
         // ======================
         const coincide =
             await bcrypt.compare(
-
                 password,
-
                 usuario.password
             );
 
@@ -107,11 +168,10 @@ export const loginUser = async (req, res) => {
         // PASSWORD INCORRECTA
         // ======================
         if (!coincide) {
-
-            req.session.mensaje =
-                "Contraseña incorrecta";
-
-            return res.redirect("/login");
+            return res.render("pages/login", {
+            error:"Contraseña incorrecta"
+        }
+);
         }
 
         // ======================
@@ -142,10 +202,11 @@ export const loginUser = async (req, res) => {
     } catch (error) {
 
         console.error(error);
-
-        res.send(
-            "Error en login"
-        );
+        res.status(500).render("pages/error",{
+            codigo: "500",
+            mensaje:"Error en login",
+            descripcion:"Intentá nuevamente más tarde."
+        });
     }
 };
 //cerrar sesion
@@ -155,7 +216,11 @@ export const logout = (req, res) => {
 
         if (error) {
             console.log(error);
-            return res.send("Error al cerrar sesión");
+            res.status(500).render("pages/error",{
+            codigo: "500",
+            mensaje:"Error al cerrara sesion",
+            descripcion:"Intentá nuevamente más tarde."
+        });
         }
 
         res.redirect("/");
@@ -163,12 +228,12 @@ export const logout = (req, res) => {
     });
 };
 //perfil
-export const showPerfil =
-async (req, res) => {
+export const showPerfil = async (req, res) => {
 
-    const userId =
-        req.params.id;
+    const userId = req.params.id;
+    const mensaje = req.query.mensaje || null;
 
+    const error = req.query.error || null;
     try {
 
         // ======================
@@ -331,32 +396,25 @@ async (req, res) => {
         // ======================
         // RENDER
         // ======================
-        res.render(
-
-            "pages/perfil",
-
-            {
-
-                usuario,
-
-                usuarioLogueado:
-                    req.session.usuario,
-
-                seguidores,
-
-                siguiendo,
-
-                yaSigue
-            }
-        );
+        res.render("pages/perfil",{
+            usuario,
+            usuarioLogueado: req.session.usuario,
+            seguidores,
+            siguiendo,
+            yaSigue,
+            mensaje,
+            error
+        });
 
     } catch (error) {
 
         console.error(error);
 
-        res.send(
-            "Error al cargar perfil"
-        );
+        res.status(500).render("pages/error",{
+            codigo: "500",
+            mensaje:"Error alcargar perfil",
+            descripcion:"Intentá nuevamente más tarde."
+        });
     }
 };
 
@@ -366,9 +424,6 @@ export const editPerfilForm = async (req, res) => {
 
     try {
         //  Solo puede editar su propio perfil
-        if (req.session.usuario.id != userId) {
-            return res.send("No autorizado");
-        }
 
         const usuario = await User.findByPk(userId);
 
@@ -376,7 +431,11 @@ export const editPerfilForm = async (req, res) => {
 
     } catch (error) {
         console.error(error);
-        res.send("Error al cargar edición");
+        res.status(500).render("pages/error",{
+            codigo: "500",
+            mensaje:"Error al cargar edicion",
+            descripcion:"Intentá nuevamente más tarde."
+        });
     }
 };
 //guardar cambios de perfil
@@ -394,24 +453,20 @@ export const updatePerfil = async (req, res) => {
     } = req.body;
 
     try {
-
-        // ======================
         // SEGURIDAD
-        // ======================
-        if (req.session.usuario.id != userId) {
 
-            return res.send("No autorizado");
-        }
 
         // ======================
         // BUSCAR USUARIO
         // ======================
         const usuario = await User.findByPk(userId);
 
-        if (!usuario) {
-
-            return res.send("Usuario no encontrado");
-        }
+        return res.status(404).render("pages/error",{
+                codigo: "404",
+                mensaje:"Usuario no encontrado",
+                descripcion:"El perfil no existe."
+            }
+        );
 
         // ======================
         // VALIDAR USERNAME
@@ -426,9 +481,12 @@ export const updatePerfil = async (req, res) => {
 
             if (existe) {
 
-                return res.send(
-                    "Ese nombre de usuario ya existe"
-                );
+                return res.status(400).render("pages/error",{
+                    codigo: "400",
+                    mensaje:"Nombre de usuario en uso",
+                    descripcion:"Elegí otro nombre."
+    }
+);
             }
 
             usuario.username = username;
@@ -452,9 +510,12 @@ export const updatePerfil = async (req, res) => {
 
             if (password !== confirmPassword) {
 
-                return res.send(
-                    "Las contraseñas no coinciden"
-                );
+                return res.status(400).render("pages/error",{
+                    codigo: "400",
+                    mensaje:"Las contraseñas no coinciden",
+                    descripcion:"Verificá los datos ingresados."
+                }
+);
             }
 
             const hashedPassword =
@@ -495,8 +556,11 @@ export const updatePerfil = async (req, res) => {
     } catch (error) {
 
         console.error(error);
-
-        res.send("Error al actualizar perfil");
+        res.status(500).render("pages/error",{
+            codigo: "500",
+            mensaje:"Error al actualizar perfil",
+            descripcion:"Intentá nuevamente más tarde."
+        });
     }
 };
 //seguidores
@@ -505,7 +569,7 @@ export const followUser = async (req, res) => {
     const seguidorId = req.session.usuario.id;
 
     if (seguidoId == seguidorId) {
-        return res.send("No podés seguirte a vos mismo");
+        return res.redirect(`/perfil/${seguidoId}?error=No podés seguirte a vos mismo`);   
     }
 
     try {
@@ -535,7 +599,11 @@ export const followUser = async (req, res) => {
 
     } catch (error) {
         console.error(error);
-        res.send("Error en follow");
+        res.status(500).render("pages/error",{
+            codigo: "500",
+            mensaje:"Error en follow",
+            descripcion:"Intentá nuevamente más tarde."
+        });
     }
 };
 
@@ -560,13 +628,13 @@ export const showNotifications = async (req, res) => {
                 }
             ],
 
-            order: [["createdAt", "DESC"]]
+            order: [["fecha", "DESC NULLS LAST"]]
         });
         // FORMATEAR FECHAS
         
         notificaciones.forEach(n => {
 
-            n.fechaFormateada = new Date(n.createdAt)
+            n.fechaFormateada = new Date(n.fecha)
                 .toLocaleString("es-AR", {
                     year: "numeric",
                     month: "2-digit",
@@ -583,6 +651,10 @@ export const showNotifications = async (req, res) => {
 
     } catch (error) {
         console.error(error);
-        res.send("Error al cargar notificaciones");
+        res.status(500).render("pages/error",{
+            codigo: "500",
+            mensaje:"Error al cargar notificaciones",
+            descripcion:"Intentá nuevamente más tarde."
+        });
     }
 };

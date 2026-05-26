@@ -1,7 +1,9 @@
-import { DataTypes } from "sequelize";
+import { DataTypes, Model } from "sequelize";
 import sequelize from "../config/database.js";
 
-const Denuncia = sequelize.define("Denuncia", {
+class Denuncia extends Model {}
+
+Denuncia.init({
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
@@ -14,12 +16,16 @@ const Denuncia = sequelize.define("Denuncia", {
     descripcion: {
         type: DataTypes.TEXT,
     }
+}, {
+    sequelize,
+    modelName: "Denuncia",
+    tableName: "Denuncias",
+    timestamps: false
 });
 
 export default Denuncia;
 
-//relaciones
-
+// relaciones
 import User from "./User.js";
 import Imagen from "./Imagen.js";
 

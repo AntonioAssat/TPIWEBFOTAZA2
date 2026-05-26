@@ -1,27 +1,30 @@
-import { DataTypes } from "sequelize";
-
+import { DataTypes, Model } from "sequelize";
 import sequelize from "../config/database.js";
 
-const Conversacion = sequelize.define(
-    "Conversacion",
-    {
+class Conversacion extends Model {}
 
-        id: {
-            type: DataTypes.INTEGER,
-            autoIncrement: true,
-            primaryKey: true
-        }
-    }
-);
+Conversacion.init({
+    id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true
+    },
+    fecha: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW
+}
+}, {
+    sequelize,
+    modelName: "Conversacion",
+    tableName: "Conversacions",
+    timestamps: false
+});
 
 export default Conversacion;
 
-// RELACIONES
-
+// relaciones
 import User from "./User.js";
-
 import Imagen from "./Imagen.js";
-
 import Mensaje from "./Mensaje.js";
 
 // comprador

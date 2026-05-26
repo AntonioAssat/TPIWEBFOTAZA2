@@ -50,7 +50,7 @@ async (req, res) => {
                     }
                 ],
 
-                order: [["createdAt", "DESC"]]
+                order: [["fecha", "DESC"]]
             });
 
         res.render(
@@ -66,9 +66,11 @@ async (req, res) => {
 
         console.error(error);
 
-        res.send(
-            "Error al cargar conversaciones"
-        );
+        res.status(500).render("pages/error",{
+            codigo: "500",
+            mensaje:"Error al cargar conversaciones",
+            descripcion:"Intentá nuevamente más tarde."
+        });
     }
 };
 
@@ -123,9 +125,11 @@ async (req, res) => {
 
         if (!conversacion) {
 
-            return res.send(
-                "Conversación no encontrada"
-            );
+            res.status(404).render("pages/error",{
+            codigo: "404",
+            mensaje:"Error al encontrar conversacion",
+            descripcion:"Intentá nuevamente más tarde."
+        });
         }
         // Validar el acceso a la conversación
 
@@ -133,12 +137,8 @@ async (req, res) => {
             req.session.usuario.id;
 
         if (
-
-            conversacion.autor_id != usuarioId &&
-
-            conversacion.comprador_id != usuarioId
+            conversacion.autor_id != usuarioId && conversacion.comprador_id != usuarioId
         ) {
-
             return res.send(
                 "No autorizado"
             );
@@ -157,9 +157,11 @@ async (req, res) => {
 
         console.error(error);
 
-        res.send(
-            "Error al cargar chat"
-        );
+        res.status(500).render("pages/error",{
+            codigo: "500",
+            mensaje:"Error al cargar chat",
+            descripcion:"Intentá nuevamente más tarde."
+        });
     }
 };
 // Enviar mensajes
@@ -183,9 +185,11 @@ async (req, res) => {
 
             if (!conversacion) {
 
-                return res.send(
-                    "Conversación no encontrada"
-            );
+                res.status(404).render("pages/error",{
+                codigo: "404",
+                mensaje:"conversacion no encontrada",
+                descripcion:"Intentá nuevamente más tarde."
+            });
         }
 
         if (
@@ -217,8 +221,10 @@ async (req, res) => {
 
         console.error(error);
 
-        res.send(
-            "Error al enviar mensaje"
-        );
+        res.status(500).render("pages/error",{
+            codigo: "500",
+            mensaje:"Error al enviar mensaje",
+            descripcion:"Intentá nuevamente más tarde."
+        });
     }
 };

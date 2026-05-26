@@ -38,7 +38,13 @@ html
 
               h1.text-center.mb-4
                 | Crear publicación
+              
+              if error
 
+                .alert.alert-danger
+
+                  = error
+                  
               form(
                 action="/publicaciones"
                 method="POST"

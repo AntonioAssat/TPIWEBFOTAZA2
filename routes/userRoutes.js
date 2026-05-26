@@ -12,7 +12,7 @@ import {
     showNotifications
 } from "../controllers/userController.js";
 import { isAuthenticated } from "../middlewares/auth.js";
-import upload from "../middlewares/upload.js";
+import {isOwner} from "../middlewares/owner.js";
 const router = express.Router();
 
 // Registro
@@ -27,9 +27,10 @@ router.get("/logout", logout);
 //perfil
 router.get("/perfil/:id", isAuthenticated, showPerfil);
 //editar perfil
-router.get("/perfil/:id/editar", isAuthenticated, editPerfilForm);
+router.get("/perfil/:id/editar", isAuthenticated, isOwner, editPerfilForm);
 router.post(
   "/perfil/:id/editar",
+  isOwner,
   isAuthenticated,
   updatePerfil
 );
