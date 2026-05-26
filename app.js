@@ -3,6 +3,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import session from "express-session";
+dotenv.config();
 //temporal 
 import sequelize from "./config/database.js";
 //USO DE MODELS
@@ -13,11 +14,18 @@ import "./models/Coleccion.js";
 import coleccionesRoutes from "./routes/colecciones.js";
 import adminRoutes from "./routes/admin.js";
 import "./models/DenunciaComentario.js";
+try {
+    await sequelize.authenticate();
+
+    console.log("Conectado a PostgreSQL");
+} catch (error) {
+    console.error("Error de conexión:",error);
+}
 //reinicia servidor
 //await sequelize.sync();
-await sequelize.sync({ alter: true });
+//await sequelize.sync({ alter: true });
 //
-dotenv.config();
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -44,7 +52,7 @@ app.use(express.json({
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use(session({
-    secret: "secreto123",
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -89,6 +97,6 @@ app.listen(PORT, () => {
 });
 
 //temporal sequelize
-sequelize.authenticate()
-  .then(() => console.log("Conectado a PostgreSQL"))
-  .catch(err => console.error("Error:", err));
+//sequelize.authenticate()
+//  .then(() => console.log("Conectado a PostgreSQL"))
+//  .catch(err => console.error("Error:", err));
