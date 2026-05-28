@@ -658,3 +658,40 @@ export const showNotifications = async (req, res) => {
         });
     }
 };
+
+export const markNotificationRead = async (req, res) => {
+
+    const notificationId =req.params.id;
+    const usuarioId =req.session.usuario.id;
+
+    try {
+
+        const notificacion =await Notificacion.findByPk(notificationId);
+
+        if (!notificacion) {
+            return res.redirect("/notificaciones");
+        }
+
+        // seguridad
+        if (notificacion.usuario_id != usuarioId) {
+            return res.redirect("/notificaciones");
+        }
+
+        notificacion.leida = true;
+
+        await notificacion.save();
+
+        res.redirect("/notificaciones");
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).render("pages/error",{
+                codigo: "500",
+                mensaje:"Error al actualizar notificación",
+                descripcion:"Intentá nuevamente más tarde."
+            }
+        );
+    }
+};

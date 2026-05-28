@@ -1,10 +1,8 @@
-import dotenv
-from "dotenv";
+import dotenv from "dotenv";
 
 dotenv.config();
 
-import sequelize
-from "../config/database.js";
+import sequelize from "../config/database.js";
 
 
 import "../models/User.js";
@@ -28,18 +26,13 @@ try {
         alter: true
     });
 
-    console.log(
-        "Base de datos inicializada correctamente"
-    );
+    console.log("Base de datos inicializada correctamente");
 
     process.exit();
 
 } catch (error) {
 
-    console.error(
-        "Error al inicializar la base de datos:",
-        error
-    );
+    console.error("Error al inicializar la base de datos:", error);
 
     process.exit(1);
 }

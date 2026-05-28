@@ -6,29 +6,24 @@ import { Op } from "sequelize";
 
 // Listar conversaciones
 
-export const showConversaciones =
-async (req, res) => {
+export const showConversaciones = async (req, res) => {
 
-    const usuarioId =
-        req.session.usuario.id;
+    const usuarioId =req.session.usuario.id;
 
     try {
 
-        const conversaciones =
-            await Conversacion.findAll({
+        const conversaciones = await Conversacion.findAll({
 
                 where: {
 
                     [Op.or]: [
 
                         {
-                            comprador_id:
-                                usuarioId
+                            comprador_id:usuarioId
                         },
 
                         {
-                            autor_id:
-                                usuarioId
+                            autor_id:usuarioId
                         }
                     ]
                 },
@@ -53,12 +48,10 @@ async (req, res) => {
                 order: [["fecha", "DESC"]]
             });
 
-        res.render(
-            "pages/conversaciones",
+        res.render("pages/conversaciones",
             {
                 conversaciones,
-                usuario:
-                    req.session.usuario
+                usuario:req.session.usuario
             }
         );
 
@@ -75,17 +68,13 @@ async (req, res) => {
 };
 
 // Ver el chat
+export const showChat = async (req, res) => {
 
-export const showChat =
-async (req, res) => {
-
-    const conversacionId =
-        req.params.id;
+    const conversacionId =req.params.id;
 
     try {
 
-        const conversacion =
-            await Conversacion.findByPk(
+        const conversacion = await Conversacion.findByPk(
                 conversacionId,
                 {
 
@@ -133,23 +122,15 @@ async (req, res) => {
         }
         // Validar el acceso a la conversación
 
-        const usuarioId =
-            req.session.usuario.id;
+        const usuarioId =req.session.usuario.id;
 
-        if (
-            conversacion.autor_id != usuarioId && conversacion.comprador_id != usuarioId
-        ) {
-            return res.send(
-                "No autorizado"
-            );
+        if (conversacion.autor_id != usuarioId && conversacion.comprador_id != usuarioId) {
+            return res.send("No autorizado");
         }
 
-        res.render(
-            "pages/chat",
-            {
+        res.render("pages/chat",{
                 conversacion,
-                usuario:
-                    req.session.usuario
+                usuario:req.session.usuario
             }
         );
 
@@ -169,19 +150,14 @@ async (req, res) => {
 export const enviarMensaje =
 async (req, res) => {
 
-    const conversacionId =
-        req.params.id;
+    const conversacionId =req.params.id;
 
     const { texto } = req.body;
 
-    const usuarioId =
-        req.session.usuario.id;
+    const usuarioId =req.session.usuario.id;
 
     try {
-            const conversacion =
-            await Conversacion.findByPk(
-                conversacionId
-            );
+            const conversacion =await Conversacion.findByPk(conversacionId);
 
             if (!conversacion) {
 
@@ -192,30 +168,17 @@ async (req, res) => {
             });
         }
 
-        if (
-
-            conversacion.autor_id != usuarioId &&
-
-            conversacion.comprador_id != usuarioId
+        if ( conversacion.autor_id != usuarioId && conversacion.comprador_id != usuarioId
         ) {
-
-            return res.send(
-                "No autorizado"
-            );
+            return res.send("No autorizado");
         }
         await Mensaje.create({
-
             texto,
-
             emisor_id: usuarioId,
-
-            conversacion_id:
-                conversacionId
+            conversacion_id:conversacionId
         });
 
-        res.redirect(
-            `/conversaciones/${conversacionId}`
-        );
+        res.redirect(`/conversaciones/${conversacionId}`);
 
     } catch (error) {
 

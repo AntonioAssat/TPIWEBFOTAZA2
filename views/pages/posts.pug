@@ -59,7 +59,15 @@ html
 
               a.nav-link(href="/colecciones")
                 | Colecciones
+            
+            if usuario && usuario.rol == "admin"
 
+              li.nav-item
+
+                a.nav-link.text-warning(
+                  href="/admin/denuncias"
+                )
+                  | Panel Admin
           if usuario
 
             ul.navbar-nav
@@ -118,6 +126,57 @@ html
             minlength="2"
           )
 
+          .mb-2
+
+            label.form-label(
+              for="usuario"
+            )
+              | Buscar por usuario
+
+            input.form-control(
+              type="text"
+              name="usuario"
+              id="usuario"
+            )
+
+          .mb-2
+
+            label.form-label(
+              for="licencia"
+            )
+              | Filtrar por licencia
+
+            select.form-select(
+              name="licencia"
+              id="licencia"
+            )
+
+              option(value="")
+                | Todas
+
+              option(value="libre")
+                | Libre
+
+              option(value="copyright")
+                | Copyright
+
+          .mb-2
+
+            label.form-label(
+              for="orden"
+            )
+              | Ordenar por
+
+            select.form-select(
+              name="orden"
+              id="orden"
+            )
+
+              option(value="recientes")
+                | Más recientes
+
+              option(value="antiguas")
+                | Más antiguas
         button.btn.btn-primary(type="submit")
           | Buscar
 

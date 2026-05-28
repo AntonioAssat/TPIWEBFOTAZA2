@@ -9,7 +9,8 @@ import {
     editPerfilForm,
     updatePerfil,
     followUser,
-    showNotifications
+    showNotifications,
+    markNotificationRead
 } from "../controllers/userController.js";
 import { isAuthenticated } from "../middlewares/auth.js";
 import {isOwner} from "../middlewares/owner.js";
@@ -39,5 +40,8 @@ router.post(
 router.post("/perfil/:id/follow", isAuthenticated, followUser);
 //notificaciones
 router.get("/notificaciones", isAuthenticated, showNotifications);
+
+//leido
+router.post("/notificaciones/:id/leida", isAuthenticated, markNotificationRead);
 
 export default router;

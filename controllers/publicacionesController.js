@@ -1,5 +1,4 @@
 import fs from "fs/promises";
-//import db from "../config/db.js";
 import Publicacion from "../models/Publicacion.js";
 import User from "../models/User.js";
 import Comentario from "../models/Comentario.js";
@@ -14,19 +13,13 @@ import Conversacion from "../models/Conversacion.js";
 import Coleccion from "../models/Coleccion.js";
 import DenunciaComentario from "../models/DenunciaComentario.js";
 import { Op } from "sequelize";
-import {
-    isRequired
-}
-from "../helpers/validations.js";
+import { isRequired} from "../helpers/validations.js";
 
 // Mostrar formulario
 export const showCreatePost =(req, res) => {
-
         const error = req.query.error || null;
 
-        res.render("pages/createPost",{
-                error
-            });
+        res.render("pages/createPost",{error});
     };
 
 // Crear publicación
@@ -41,8 +34,7 @@ export const createPost = async (req, res) => {
         imagenesBase64
     } = req.body;
 
-    const usuarioId =
-        req.session.usuario.id;
+    const usuarioId = req.session.usuario.id;
 
     try {
             if (!isRequired(titulo)) {
@@ -64,23 +56,17 @@ export const createPost = async (req, res) => {
                     "/publicaciones/nueva?error=Debés subir al menos una imagen"
                 );
             }
-        // ======================
+   
         // CREAR PUBLICACIÓN
-        // ======================
         const publicacion =
             await Publicacion.create({
 
                 titulo,
-
                 descripcion,
-
-                usuario_id:
-                    usuarioId
+                usuario_id:usuarioId
             });
-
-        // ======================
         // TAGS
-        // ======================
+   
         if (tags) {
 
             const listaTags =
@@ -88,31 +74,23 @@ export const createPost = async (req, res) => {
 
             for (let nombreTag of listaTags) {
 
-                nombreTag =
-                    nombreTag
-                        .trim()
-                        .toLowerCase();
+                nombreTag =nombreTag.trim().toLowerCase();
 
-                let tag =
-                    await Tag.findOne({
+                let tag =await Tag.findOne({
 
                         where: {
-                            nombre:
-                                nombreTag
+                            nombre:nombreTag
                         }
                     });
 
                 // crear si no existe
                 if (!tag) {
 
-                    tag =
-                        await Tag.create({
+                    tag =await Tag.create({
 
-                            nombre:
-                                nombreTag
+                            nombre:nombreTag
                         });
                 }
-
                 // relacionar
                 await publicacion.addTag(
                     tag
@@ -120,46 +98,29 @@ export const createPost = async (req, res) => {
             }
         }
 
-        // ======================
         // IMÁGENES BASE64
-        // ======================
         if (imagenesBase64) {
 
             // si viene una sola
-            const listaImagenes =
-                Array.isArray(
-                    imagenesBase64
-                )
+            const listaImagenes = Array.isArray(imagenesBase64)
                     ? imagenesBase64
                     : [imagenesBase64];
 
-            for (
-                const base64
-                of listaImagenes
-            ) {
+            for (const base64 of listaImagenes) {
 
                 await Imagen.create({
 
                     url: base64,
-
                     licencia,
-
                     watermark,
-
                     estado: "activa",
-
-                    publicacion_id:
-                        publicacion.id
+                    publicacion_id:publicacion.id
                 });
             }
         }
-
-        // ======================
         // REDIRECT
-        // ======================
-        res.redirect(
-            "/publicaciones"
-        );
+
+        res.redirect("/publicaciones");
 
     } catch (error) {
 
@@ -176,94 +137,159 @@ export const createPost = async (req, res) => {
 export const showPosts = async (req, res) => {
 
     try {
+
         // BUSCADOR
-        const search = req.query.search || "";
+        const search =req.query.search || "";
+
+        const usuario =req.query.usuario || "";
+
+        const licencia =req.query.licencia || "";
+
+        const orden =req.query.orden || "recientes";
+
         const error =req.query.error || null;
+
+        // ORDEN
+        let ordenPublicaciones = [
+            ["fecha", "DESC"]
+        ];
+
+        if (orden == "antiguas") {
+
+            ordenPublicaciones = [["fecha", "ASC"]];
+        }
+
+        // FILTRO LICENCIA
+        let filtroLicencia = {};
+
+        if (licencia) {
+
+            filtroLicencia = {
+                licencia
+            };
+
+        } else if (!req.session.usuario) {
+
+            filtroLicencia = {
+
+                licencia: {
+                    [Op.ne]: "copyright"
+                }
+            };
+        }
+
         const publicaciones = await Publicacion.findAll({
 
-            where: {
-                titulo: {
-                    [Op.iLike]: `%${search}%`
-                }
-            },
+                where: search ? {
 
-            include: [
-                // USUARIO
-                {
-                    model: User,
-                    attributes: ["id", "username"]
-                },
-                // IMÁGENES
+                        [Op.or]: [
 
-                {
-                    model: Imagen,
+                            {
+                                titulo: {
+                                    [Op.iLike]:
+                                        `%${search}%`
+                                }
+                            },
 
-                    // SI NO ESTÁ LOGUEADO
-                    // SOLO VE IMÁGENES PÚBLICAS
-                    where: {
-
-                        estado: {
-                            [Op.ne]: "eliminada"
-                        },
-
-                        ...( !req.session.usuario
-                            ? {
-                                licencia: {
-                                    [Op.ne]: "copyright"
+                            {
+                                '$Tags.nombre$': {
+                                    [Op.iLike]:
+                                        `%${search}%`
                                 }
                             }
-                            : {}
-                        )
+                        ]
+                    }
+                    : undefined,
+
+                include: [
+
+                    // USUARIO
+                    {
+                        model: User,
+
+                        attributes: [
+                            "id",
+                            "username"
+                        ],
+
+                        where: usuario
+                            ? {
+                                username: {
+                                    [Op.iLike]:
+                                        `%${usuario}%`
+                                }
+                            }
+                            : undefined,
+
+                        required: !!usuario
                     },
 
-                    required: false,
+                    // IMÁGENES
+                    {
+                        model: Imagen,
 
-                    include: [
+                        where: {
 
-                        // COMENTARIOS
-                        {
-                            model: Comentario,
+                            estado: {
+                                [Op.ne]:
+                                    "eliminada"
+                            },
 
-                            include: [
-
-                                {
-                                    model: User
-                                },
-
-                                {
-                                    model: DenunciaComentario,
-
-                                    include: [
-                                        {
-                                            model: User
-                                        }
-                                    ]
-                                }
-                            ]
+                            ...filtroLicencia
                         },
 
-                        // VALORACIONES
-                        {
-                            model: Valoracion
-                        }
-                    ]
-                },
-                // TAGS
-                {
-                    model: Tag,
+                        required: false,
 
-                    where: search
-                        ? {
-                              nombre: {
-                                  [Op.iLike]: `%${search}%`
-                              }
-                          }
-                        : undefined,
+                        include: [
 
-                    required: false
-                }
-            ]
-        });
+                            // COMENTARIOS
+                            {
+                                model: Comentario,
+
+                                include: [
+
+                                    {
+                                        model: User
+                                    },
+
+                                    {
+                                        model: DenunciaComentario,
+
+                                        include: [
+                                            {
+                                                model:User
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+
+                            // VALORACIONES
+                            {
+                                model:Valoracion
+                            }
+                        ]
+                    },
+
+                    // TAGS
+                    {
+                        model: Tag,
+
+                        where: search
+                            ? {
+                                nombre: {
+                                    [Op.iLike]:
+                                        `%${search}%`
+                                }
+                            }
+                            : undefined,
+
+                        required: false
+                    }
+                ],
+
+                order:ordenPublicaciones
+            });
 
         // PREPARAR DATOS PARA LA VISTA
         publicaciones.forEach(pub => {
@@ -271,10 +297,7 @@ export const showPosts = async (req, res) => {
             pub.Imagens.forEach(img => {
 
                 // promedio valoraciones
-                if (
-                    img.Valoracions &&
-                    img.Valoracions.length > 0
-                ) {
+                if ( img.Valoracions && img.Valoracions.length > 0) {
 
                     const suma =
                         img.Valoracions.reduce(
@@ -289,31 +312,40 @@ export const showPosts = async (req, res) => {
                     ).toFixed(1);
 
                 } else {
+
                     img.promedio = 0;
                 }
-                img.tieneValoraciones =img.Valoracions && img.Valoracions.length > 0;
-                img.tieneComentarios =img.Comentarios && img.Comentarios.length > 0;
-                img.estaEnRevision =img.estado == "en_revision";
-                img.esCopyright =img.licencia == "copyright";
-                img.esAutor =req.session.usuario && pub.User && req.session.usuario.id == pub.User.id;
-                img.puedeCerrarComentarios = img.esAutor && !img.comentarios_cerrados;
-                img.puedeAbrirComentarios =img.esAutor && img.comentarios_cerrados;
-                img.usuarioLogueado =!!req.session.usuario;
-                img.puedeDenunciarImagen =img.usuarioLogueado && !img.esAutor;
-                // puede valorar
-                img.puedeValorar =
+
+                img.tieneValoraciones = img.Valoracions && img.Valoracions.length > 0;
+
+                img.tieneComentarios = img.Comentarios && img.Comentarios.length > 0;
+
+                img.estaEnRevision = img.estado == "en_revision";
+
+                img.esCopyright = img.licencia == "copyright";
+
+                img.esAutor =
                     req.session.usuario &&
-                    req.session.usuario.id !==
-                    pub.usuario_id;
+                    pub.User &&
+                    req.session.usuario.id ==
+                    pub.User.id;
+
+                img.puedeCerrarComentarios = img.esAutor && !img.comentarios_cerrados;
+
+                img.puedeAbrirComentarios = img.esAutor && img.comentarios_cerrados;
+
+                img.usuarioLogueado = !!req.session.usuario;
+
+                img.puedeDenunciarImagen = img.usuarioLogueado && !img.esAutor;
+
+                // puede valorar
+                img.puedeValorar = req.session.usuario && req.session.usuario.id !== pub.usuario_id;
 
                 // comentarios abiertos
-                img.puedeComentar =
-                    !img.comentarios_cerrados;
+                img.puedeComentar = !img.comentarios_cerrados;
 
                 // preparar comentarios
-                if (
-                    img.Comentarios
-                ) {
+                if (img.Comentarios) {
 
                     img.Comentarios.forEach(c => {
 
@@ -325,29 +357,25 @@ export const showPosts = async (req, res) => {
                 }
             });
         });
-        const publicacionesFiltradas =
-            publicaciones.filter(
 
-                pub =>
+        const publicacionesFiltradas = publicaciones.filter(pub => pub.Imagens && pub.Imagens.length > 0);
 
-                    pub.Imagens &&
-                    pub.Imagens.length > 0
-            );
         let colecciones = [];
 
         if (req.session.usuario) {
 
-            colecciones =
-                await Coleccion.findAll({
+            colecciones = await Coleccion.findAll({
 
                     where: {
-                        usuario_id:
-                            req.session.usuario.id
+
+                        usuario_id: req.session.usuario.id
                     }
                 });
         }
+
         res.render("pages/posts", {
-            publicaciones:publicacionesFiltradas,
+
+            publicaciones: publicacionesFiltradas,
             colecciones,
             error
         });
@@ -356,11 +384,12 @@ export const showPosts = async (req, res) => {
 
         console.error(error);
 
-        res.status(500).render("pages/error", {
-            codigo: "500",
-            mensaje: "Error al cargar publicaciones",
-            descripcion: "Intentá nuevamente más tarde."
-        });
+        res.status(500).render("pages/error",{
+                codigo: "500",
+                mensaje:"Error al cargar publicaciones",
+                descripcion:"Intentá nuevamente más tarde."
+            }
+        );
     }
 };
 
@@ -400,33 +429,21 @@ export const addComment = async (req, res) => {
 
     const { texto } = req.body;
 
-    const imagenId =
-        req.params.id;
-
-    const usuarioId =
-        req.session.usuario.id;
+    const imagenId =req.params.id;
+    const usuarioId = req.session.usuario.id;
 
     try {
                     if (!isRequired(texto)) {
-
-                        return res.redirect(
-                            "/publicaciones?error=El comentario no puede estar vacío"
-                        );
+                        return res.redirect("/publicaciones?error=El comentario no puede estar vacío");
                     }
 
                     if (texto.length > 300) {
-
-                        return res.redirect(
-                            "/publicaciones?error=Máximo 300 caracteres"
-                        );
+                        return res.redirect("/publicaciones?error=Máximo 300 caracteres");
                     }
         
         // Buscar imagen de la publicación
    
-        const imagen =
-            await Imagen.findByPk(
-                imagenId
-            );
+        const imagen =await Imagen.findByPk(imagenId);
 
         if (!imagen) {
 
@@ -440,62 +457,39 @@ export const addComment = async (req, res) => {
       
         // Comentarios cerrados
    
-        if (
-            imagen.comentarios_cerrados
-        ) {
+        if (imagen.comentarios_cerrados) {
 
-            return res.redirect(
-                "/publicaciones?error=Los comentarios están cerrados"
-            );
+            return res.redirect("/publicaciones?error=Los comentarios están cerrados");
         }
 
         // Crear comentario
    
         await Comentario.create({
-
             texto,
-
-            imagen_id:
-                imagenId,
-
-            usuario_id:
-                usuarioId
+            imagen_id:imagenId,
+            usuario_id:usuarioId
         });
 
         // Publicación
  
-        const publicacion =
-            await Publicacion.findByPk(
-                imagen.publicacion_id
-            );
+        const publicacion =await Publicacion.findByPk(imagen.publicacion_id);
 
         // No notificar si el autor comenta su propia publicación
 
-        if (
-            publicacion.usuario_id !=
-            usuarioId
-        ) {
+        if (publicacion.usuario_id !=usuarioId) {
 
             await Notificacion.create({
 
                 tipo: "comentario",
-
-                mensaje:
-                    "comentó tu publicación",
-
-                usuario_id:
-                    publicacion.usuario_id,
-
-                usuario_accion_id:
-                    usuarioId
+                mensaje:"comentó tu publicación",
+                usuario_id:publicacion.usuario_id,
+                usuario_accion_id:usuarioId
             });
         }
 
         // Redirect
   
-        res.redirect(
-            "/publicaciones"
-        );
+        res.redirect("/publicaciones");
 
     } catch (error) {
 
@@ -511,20 +505,13 @@ export const addComment = async (req, res) => {
 //cerrar comentarios
 export const closeComments = async (req, res) => {
 
-    const imagenId =
-        req.params.id;
-
-    const usuarioId =
-        req.session.usuario.id;
+    const imagenId =req.params.id;
+    const usuarioId =req.session.usuario.id;
 
     try {
-
-        // Buscar imagen de la publicación
+    // Buscar imagen de la publicación
   
-        const imagen =
-            await Imagen.findByPk(
-                imagenId
-            );
+        const imagen =await Imagen.findByPk(imagenId);
 
         if (!imagen) {
 
@@ -533,15 +520,12 @@ export const closeComments = async (req, res) => {
                 mensaje:"Imagen no encontrada",
                 descripcion:"La imagen no existe."
                 }
-);
+            );
         }
 
         // Publicación
 
-        const publicacion =
-            await Publicacion.findByPk(
-                imagen.publicacion_id
-            );
+        const publicacion =await Publicacion.findByPk(imagen.publicacion_id);
 
         // Solo el autor puede cerrar comentarios
 
@@ -556,9 +540,7 @@ export const closeComments = async (req, res) => {
 
         await imagen.save();
 
-        res.redirect(
-            "/publicaciones"
-        );
+        res.redirect("/publicaciones");
 
     } catch (error) {
 
@@ -574,18 +556,12 @@ export const closeComments = async (req, res) => {
 //abrir comentarios
 export const openComments = async (req, res) => {
 
-    const imagenId =
-        req.params.id;
-
-    const usuarioId =
-        req.session.usuario.id;
+    const imagenId = req.params.id;
+    const usuarioId = req.session.usuario.id;
 
     try {
 
-        const imagen =
-            await Imagen.findByPk(
-                imagenId
-            );
+        const imagen =await Imagen.findByPk(imagenId);
 
         if (!imagen) {
             res.status(404).render("pages/error",{
@@ -596,24 +572,18 @@ export const openComments = async (req, res) => {
 );
         }
 
-        const publicacion =
-            await Publicacion.findByPk(
-                imagen.publicacion_id
-            );
+        const publicacion = await Publicacion.findByPk(imagen.publicacion_id);
 
         // solo autor
         if (publicacion.usuario_id !=usuarioId) {
             return res.redirect("/publicaciones?error=No autorizado");
         }
 
-        imagen.comentarios_cerrados =
-            false;
+        imagen.comentarios_cerrados = false;
 
         await imagen.save();
 
-        res.redirect(
-            "/publicaciones"
-        );
+        res.redirect("/publicaciones");
 
     } catch (error) {
 
@@ -632,20 +602,14 @@ export const openComments = async (req, res) => {
 export const addRating = async (req, res) => {
 
     const { valor } = req.body;
-
     const imagenId = req.params.id;
-
-    const usuarioId =
-        req.session.usuario.id;
+    const usuarioId = req.session.usuario.id;
 
     try {
 
         // Buscar imagen
   
-        const imagen =
-            await Imagen.findByPk(
-                imagenId
-            );
+        const imagen =await Imagen.findByPk(imagenId);
 
         if (!imagen) {
 
@@ -659,35 +623,25 @@ export const addRating = async (req, res) => {
 
         // Buscar publicación
 
-        const publicacion =
-            await Publicacion.findByPk(
-                imagen.publicacion_id
-            );
+        const publicacion =await Publicacion.findByPk(imagen.publicacion_id);
 
         // Bloquear si es propia
  
         if (publicacion.usuario_id == usuarioId) {
 
-            req.session.mensaje =
-                "No podés valorar tu propia imagen";
+            req.session.mensaje ="No podés valorar tu propia imagen";
 
-            return res.redirect(
-                "/publicaciones"
-            );
+            return res.redirect("/publicaciones");
         }
 
         // Buscar valoración existente
 
-        const existente =
-            await Valoracion.findOne({
+        const existente = await Valoracion.findOne({
 
                 where: {
 
-                    imagen_id:
-                        imagenId,
-
-                    usuario_id:
-                        usuarioId
+                    imagen_id:imagenId,
+                    usuario_id:usuarioId
                 }
             });
 
@@ -695,24 +649,18 @@ export const addRating = async (req, res) => {
 
         if (existente) {
 
-            existente.valor =
-                valor;
+            existente.valor =valor;
 
             await existente.save();
 
         } else {
-
             // Crear nueva valoración
 
             await Valoracion.create({
 
                 valor,
-
-                imagen_id:
-                    imagenId,
-
-                usuario_id:
-                    usuarioId
+                imagen_id:imagenId,
+                usuario_id:usuarioId
             });
         }
 
@@ -722,22 +670,16 @@ export const addRating = async (req, res) => {
 
             tipo: "valoracion",
 
-            mensaje:
-                "valoró tu imagen",
+            mensaje:"valoró tu imagen",
 
-            usuario_id:
-                publicacion.usuario_id,
+            usuario_id:publicacion.usuario_id,
 
-            usuario_accion_id:
-                usuarioId
+            usuario_accion_id:usuarioId
         });
 
-        // ======================
         // REDIRECT
-        // ======================
-        res.redirect(
-            "/publicaciones"
-        );
+
+        res.redirect("/publicaciones");
 
     } catch (error) {
 
@@ -808,16 +750,13 @@ export const addDenuncia = async (req, res) => {
        if (total > 3) {
 
             imagen.estado = "en_revision";
-
-            req.session.mensaje =
-                "La imagen pasó a revisión por múltiples denuncias";
+            req.session.mensaje ="La imagen pasó a revisión por múltiples denuncias";
 
         } else {
 
             imagen.estado = "denunciada";
 
-            req.session.mensaje =
-                `Denuncia registrada (${total}/4)`;
+            req.session.mensaje =`Denuncia registrada (${total}/4)`;
         }
         await imagen.save();
 
@@ -838,20 +777,15 @@ export const addDenuncia = async (req, res) => {
 export const showFeedSeguidos =
 async (req, res) => {
 
-    const usuarioId =
-        req.session.usuario.id;
+    const usuarioId = req.session.usuario.id;
 
     try {
-
-        // ======================
         // OBTENER SEGUIDOS
-        // ======================
-        const follows =
-            await Follow.findAll({
+  
+        const follows = await Follow.findAll({
 
                 where: {
-                    seguidor_id:
-                        usuarioId
+                    seguidor_id:usuarioId
                 }
             });
 
@@ -861,16 +795,11 @@ async (req, res) => {
                 f => f.seguido_id
             );
 
-        // ======================
         // PUBLICACIONES
-        // ======================
-        const publicaciones =
-            await Publicacion.findAll({
+        const publicaciones = await Publicacion.findAll({
 
                 where: {
-
-                    usuario_id:
-                        idsSeguidos
+                    usuario_id:idsSeguidos
                 },
 
                 include: [
@@ -920,9 +849,7 @@ async (req, res) => {
                 order: [["fecha", "DESC"]]
             });
 
-        // ======================
         // PROMEDIOS
-        // ======================
         publicaciones.forEach(pub => {
 
             pub.Imagens.forEach(img => {
@@ -955,33 +882,19 @@ async (req, res) => {
         });
 
         const publicacionesFiltradas =
-            publicaciones.filter(
+            publicaciones.filter(pub => pub.Imagens && pub.Imagens.length > 0);
 
-                pub =>
-
-                    pub.Imagens &&
-                    pub.Imagens.length > 0
-            );
-
-        // ======================
         // COLECCIONES
-        // ======================
-        const colecciones =
-            await Coleccion.findAll({
+
+        const colecciones = await Coleccion.findAll({
 
                 where: {
-                    usuario_id:
-                        usuarioId
+                    usuario_id:usuarioId
                 }
             });
 
-        // ======================
         // RENDER
-        // ======================
-        res.render(
-            "pages/posts",
-
-            {
+        res.render("pages/posts",{
                 publicaciones: publicacionesFiltradas,
                 colecciones
             }
@@ -1001,7 +914,6 @@ async (req, res) => {
 export const marcarInteres = async (req, res) => {
     console.log("Entró a marcarInteres");
     const imagenId = req.params.id;
-
     const usuarioId = req.session.usuario.id;
 
     try {
@@ -1043,29 +955,23 @@ export const marcarInteres = async (req, res) => {
         // CREAR INTERÉS
         
         await Interes.create({
-
             usuario_id: usuarioId,
-
             imagen_id: imagenId
         });
 
 
         // AUTOR
   
-        const autorId =
-            imagen.Publicacion.usuario_id;
+        const autorId = imagen.Publicacion.usuario_id;
         
             // Crear conversacion
       
-        const conversacionExistente =
-            await Conversacion.findOne({
+        const conversacionExistente= await Conversacion.findOne({
 
                 where: {
 
                     comprador_id: usuarioId,
-
                     autor_id: autorId,
-
                     imagen_id: imagenId
                 }
             });
@@ -1078,9 +984,7 @@ export const marcarInteres = async (req, res) => {
                 await Conversacion.create({
 
                     comprador_id: usuarioId,
-
                     autor_id: autorId,
-
                     imagen_id: imagenId
                 });
 
@@ -1092,14 +996,9 @@ export const marcarInteres = async (req, res) => {
         await Notificacion.create({
 
             tipo: "interes",
-
-            mensaje:
-                "está interesado en adquirir tu imagen",
-
+            mensaje:"está interesado en adquirir tu imagen",
             usuario_id: autorId,
-
             usuario_accion_id: usuarioId,
-
             conversacion_id: conversacion.id
         });
 
@@ -1120,9 +1019,7 @@ export const marcarInteres = async (req, res) => {
 export const denunciarComentario = async (req, res) => {
 
     const comentarioId = req.params.id;
-
     const usuarioId = req.session.usuario.id;
-
     const {motivo, descripcion} = req.body;
 
     try {
@@ -1131,9 +1028,7 @@ export const denunciarComentario = async (req, res) => {
         const comentario = await Comentario.findByPk(comentarioId);
 
         if (!comentario) {
-
             req.session.mensaje = "Comentario no encontrado";
-
             return res.redirect("/publicaciones");
         }
 
@@ -1144,18 +1039,14 @@ export const denunciarComentario = async (req, res) => {
 
                 where: {
 
-                    comentario_id:
-                        comentarioId,
-
-                    usuario_id:
-                        usuarioId
+                    comentario_id:comentarioId,
+                    usuario_id:usuarioId
                 }
             });
 
         if (existente) {
 
             req.session.mensaje = "Ya denunciaste este comentario";
-
             return res.redirect("/publicaciones");
         }
 
@@ -1165,18 +1056,13 @@ export const denunciarComentario = async (req, res) => {
 
             motivo,
             descripcion,
-            comentario_id:
-                comentarioId,
-            usuario_id:
-                usuarioId
+            comentario_id:comentarioId,
+            usuario_id:usuarioId
         });
 
-        req.session.mensaje =
-            "Comentario denunciado correctamente";
+        req.session.mensaje ="Comentario denunciado correctamente";
 
-        res.redirect(
-            "/publicaciones"
-        );
+        res.redirect("/publicaciones");
 
     } catch (error) {
 
@@ -1192,79 +1078,44 @@ export const denunciarComentario = async (req, res) => {
 export const deleteComment =
 async (req, res) => {
 
-    const comentarioId =
-        req.params.id;
-
-    const usuarioId =
-        req.session.usuario.id;
+    const comentarioId =req.params.id;
+    const usuarioId =req.session.usuario.id;
 
     try {
 
-        // ======================
         // COMENTARIO
-        // ======================
-        const comentario =
-            await Comentario.findByPk(
-                comentarioId
-            );
+
+        const comentario = await Comentario.findByPk(comentarioId);
 
         if (!comentario) {
 
-            req.session.mensaje =
-                "Comentario no encontrado";
-
-            return res.redirect(
-                "/publicaciones"
-            );
+            req.session.mensaje ="Comentario no encontrado";
+            return res.redirect("/publicaciones");
         }
+         // IMAGEN
+  
+        const imagen = await Imagen.findByPk(comentario.imagen_id);
 
-        // ======================
-        // IMAGEN
-        // ======================
-        const imagen =
-            await Imagen.findByPk(
-                comentario.imagen_id
-            );
-
-        // ======================
         // PUBLICACIÓN
-        // ======================
-        const publicacion =
-            await Publicacion.findByPk(
-                imagen.publicacion_id
-            );
+  
+        const publicacion =await Publicacion.findByPk(imagen.publicacion_id);
 
-        // ======================
         // SOLO AUTOR
-        // ======================
-        if (
-            publicacion.usuario_id !=
-            usuarioId
-        ) {
+        if (publicacion.usuario_id != usuarioId) {
 
-            req.session.mensaje =
-                "No autorizado";
+            req.session.mensaje ="No autorizado";
 
-            return res.redirect(
-                "/publicaciones"
-            );
+            return res.redirect("/publicaciones");
         }
-
-        // ======================
         // ELIMINAR DENUNCIAS
-        // ======================
         await DenunciaComentario.destroy({
 
             where: {
 
-                comentario_id:
-                    comentarioId
+                comentario_id:comentarioId
             }
         });
-
-        // ======================
         // ELIMINAR COMENTARIO
-        // ======================
         await comentario.destroy();
 
         req.session.mensaje ="Comentario eliminado correctamente";
@@ -1283,22 +1134,14 @@ async (req, res) => {
     }
 };
 
-export const deletePost =
-async (req, res) => {
+export const deletePost = async (req, res) => {
 
-    const publicacionId =
-        req.params.id;
-
-    const usuarioId =
-        req.session.usuario.id;
+    const publicacionId = req.params.id;
+    const usuarioId = req.session.usuario.id;
 
     try {
-
-        // ======================
         // PUBLICACIÓN
-        // ======================
-        const publicacion =
-            await Publicacion.findByPk(
+        const publicacion = await Publicacion.findByPk(
 
                 publicacionId,
 
@@ -1313,71 +1156,36 @@ async (req, res) => {
 
         if (!publicacion) {
 
-            req.session.mensaje =
-                "Publicación no encontrada";
+            req.session.mensaje ="Publicación no encontrada";
 
-            return res.redirect(
-                "/publicaciones"
-            );
+            return res.redirect("/publicaciones");
         }
-
-        // ======================
         // SOLO AUTOR
-        // ======================
-        if (
-            publicacion.usuario_id !=
-            usuarioId
-        ) {
+        if (publicacion.usuario_id !=usuarioId) {
+            req.session.mensaje ="No autorizado";
 
-            req.session.mensaje =
-                "No autorizado";
-
-            return res.redirect(
-                "/publicaciones"
-            );
+            return res.redirect("/publicaciones");
         }
-
-        // ======================
         // BLOQUEAR SI HAY REVISIÓN
-        // ======================
-        const enRevision =
-            publicacion.Imagens.some(
-
-                img =>
-                    img.estado ===
-                    "en_revision"
-            );
+        const enRevision =publicacion.Imagens.some(img =>img.estado ==="en_revision");
 
         if (enRevision) {
 
-            req.session.mensaje =
-                "No podés eliminar una publicación en revisión";
+            req.session.mensaje ="No podés eliminar una publicación en revisión";
 
-            return res.redirect(
-                `/perfil/${usuarioId}`
-            );
+            return res.redirect(`/perfil/${usuarioId}`);
         }
-
-        // ======================
         // ELIMINAR IMÁGENES
-        // ======================
-        for (
-            const img
-            of publicacion.Imagens
-        ) {
+        for (const img of publicacion.Imagens) {
 
-            img.estado =
-                "eliminada";
+            img.estado ="eliminada";
 
             await img.save();
         }
 
-        req.session.mensaje =
-            "Publicación eliminada correctamente";
+        req.session.mensaje ="Publicación eliminada correctamente";
 
-        res.redirect(
-            `/perfil/${usuarioId}`
-        );
+        res.redirect(`/perfil/${usuarioId}`);
 
     } catch (error) {
 
@@ -1394,19 +1202,14 @@ async (req, res) => {
 export const showEditPost =
 async (req, res) => {
 
-    const publicacionId =
-        req.params.id;
+    const publicacionId = req.params.id;
 
-    const usuarioId =
-        req.session.usuario.id;
+    const usuarioId = req.session.usuario.id;
 
     try {
-
-        // ======================
         // PUBLICACIÓN
-        // ======================
-        const publicacion =
-            await Publicacion.findByPk(
+      
+        const publicacion =await Publicacion.findByPk(
 
                 publicacionId,
 
@@ -1427,50 +1230,24 @@ async (req, res) => {
 
         if (!publicacion) {
 
-            return res.redirect(
-                `/perfil/${usuarioId}?error=Publicación no encontrada`
-            );
+            return res.redirect(`/perfil/${usuarioId}?error=Publicación no encontrada`);
         }
 
-        // ======================
         // SOLO AUTOR
-        // ======================
+
         if ( publicacion.usuario_id != usuarioId) {
-            return res.redirect(
-                `/perfil/${usuarioId}?error=No autorizado`
-            );
+            return res.redirect(`/perfil/${usuarioId}?error=No autorizado`);
         }
-
-        // ======================
         // BLOQUEAR REVISIÓN
-        // ======================
-        const enRevision =
-            publicacion.Imagens.some(
-
-                img =>
-                    img.estado ===
-                    "en_revision"
-            );
+        const enRevision =publicacion.Imagens.some(img => img.estado === "en_revision");
 
         if (enRevision) {
-            return res.redirect(
-                `/perfil/${usuarioId}?error=No podés editar publicaciones en revisión`
-            );
+            return res.redirect(`/perfil/${usuarioId}?error=No podés editar publicaciones en revisión`);
         }
-
-        // ======================
         // TAGS STRING
-        // ======================
-        const tagsString =
-            publicacion.Tags.map(
-
-                t => t.nombre
-
-            ).join(", ");
-
-        // ======================
+        const tagsString =publicacion.Tags.map(t => t.nombre).join(", ");
         // RENDER
-        // ======================
+  
         const error =req.query.error || null;
 
         res.render("pages/editPost",{
@@ -1492,14 +1269,11 @@ async (req, res) => {
 };
  
 //editat post
-export const editPost =
-async (req, res) => {
+export const editPost = async (req, res) => {
 
-    const publicacionId =
-        req.params.id;
+    const publicacionId = req.params.id;
 
-    const usuarioId =
-        req.session.usuario.id;
+    const usuarioId = req.session.usuario.id;
 
     const {
         titulo,
@@ -1544,99 +1318,55 @@ async (req, res) => {
             );
 
         if (!publicacion) {
-            return res.redirect(
-                `/perfil/${usuarioId}?error=Publicación no encontrada`
-            );
+            return res.redirect(`/perfil/${usuarioId}?error=Publicación no encontrada`);
         }
-
-        // ======================
         // SOLO AUTOR
-        // ======================
         if (publicacion.usuario_id != usuarioId) {
-            return res.redirect(
-                `/perfil/${usuarioId}?error=No autorizado`
-            );
+            return res.redirect(`/perfil/${usuarioId}?error=No autorizado`);
         }
-
-        // ======================
         // BLOQUEAR REVISIÓN
-        // ======================
-        const enRevision =
-            publicacion.Imagens.some(
-
-                img =>
-                    img.estado ===
-                    "en_revision"
-            );
+        const enRevision =publicacion.Imagens.some(img => img.estado === "en_revision");
 
         if (enRevision) {
-            return res.redirect(
-                `/perfil/${usuarioId}?error=No podés editar publicaciones en revisión`
-            );
+            return res.redirect(`/perfil/${usuarioId}?error=No podés editar publicaciones en revisión`);
         }
-
-        // ======================
         // ACTUALIZAR
-        // ======================
-        publicacion.titulo =
-            titulo;
+        publicacion.titulo =titulo;
 
-        publicacion.descripcion =
-            descripcion;
+        publicacion.descripcion =descripcion;
 
         await publicacion.save();
-
-        // ======================
         // TAGS
-        // ======================
         const nuevosTags = [];
 
         if (tags && tags.trim() !== "") {
 
-            const listaTags =
-                tags.split(",");
+            const listaTags =tags.split(",");
 
             for (let nombreTag of listaTags) {
 
-                nombreTag =
-                    nombreTag
-                    .trim()
-                    .toLowerCase();
+                nombreTag = nombreTag.trim().toLowerCase();
 
-                let tag =
-                    await Tag.findOne({
+                let tag = await Tag.findOne({
 
                         where: {
 
-                            nombre:
-                                nombreTag
+                            nombre:nombreTag
                         }
                     });
 
                 if (!tag) {
 
-                    tag =
-                        await Tag.create({
-
-                            nombre:
-                                nombreTag
-                        });
+                    tag =await Tag.create({nombre: nombreTag});
                 }
 
                 nuevosTags.push(tag);
             }
         }
-
-        // ======================
         // REEMPLAZAR TAGS
-        // ======================
-        await publicacion.setTags(
-            nuevosTags
-        );
+        await publicacion.setTags(nuevosTags);
 
-        res.redirect(
-            `/perfil/${usuarioId}?mensaje=Publicación actualizada correctamente`
-        );
+        res.redirect(`/perfil/${usuarioId}?mensaje=Publicación actualizada correctamente`);
 
     } catch (error) {
 

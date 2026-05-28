@@ -4,13 +4,14 @@ import User from "../models/User.js";
 import Publicacion from "../models/Publicacion.js";
 // Ver denuncias para administración
 
-export const showDenuncias =
-async (req, res) => {
+export const showDenuncias =async (req, res) => {
 
     try {
+        const denuncias =await Denuncia.findAll({
+            where: {
 
-        const denuncias =
-            await Denuncia.findAll({
+                resuelta: false
+            },
 
                 include: [
 
@@ -24,16 +25,14 @@ async (req, res) => {
                 ],
 
                 order: [
-                    ["createdAt", "DESC"]
+                    ["fecha", "DESC"]
                 ]
             });
 
-        res.render(
-            "pages/adminDenuncias",
+        res.render("pages/adminDenuncias",
             {
                 denuncias,
-                usuario:
-                    req.session.usuario
+                usuario:req.session.usuario
             }
         );
 
@@ -51,24 +50,16 @@ async (req, res) => {
 
 // Aprobar denuncia (eliminar imagen)
 
-export const aprobarImagen =
-async (req, res) => {
-
-    const imagenId =
-        req.params.id;
+export const aprobarImagen =async (req, res) => {
+    const imagenId =req.params.id;
 
     try {
 
-        const imagen =
-            await Imagen.findByPk(
-                imagenId
-            );
+        const imagen =await Imagen.findByPk(imagenId);
 
         if (!imagen) {
 
-            return res.send(
-                "Imagen no encontrada"
-            );
+            return res.send("Imagen no encontrada");
         }
 
         // restaurar
@@ -76,9 +67,17 @@ async (req, res) => {
 
         await imagen.save();
 
-        res.redirect(
-            "/admin/denuncias"
+        await Denuncia.update(
+            {
+                resuelta: true
+            },
+            {
+                where: {
+                    imagen_id: imagenId
+                }
+            }
         );
+                res.redirect("/admin/denuncias");
 
     } catch (error) {
 
@@ -94,70 +93,39 @@ async (req, res) => {
 
 // Eliminar imagen (marcar como eliminada)
 
-export const eliminarImagen =
-async (req, res) => {
+export const eliminarImagen =async (req, res) => {
 
-    const imagenId =
-        req.params.id;
+    const imagenId =req.params.id;
 
     try {
-
-        // ======================
         // BUSCAR IMAGEN
-        // ======================
-        const imagen =
-            await Imagen.findByPk(
-                imagenId
-            );
+        const imagen =await Imagen.findByPk(imagenId);
 
         if (!imagen) {
 
-            req.session.mensaje =
-                "Imagen no encontrada";
+            req.session.mensaje ="Imagen no encontrada";
 
-            return res.redirect(
-                "/admin/denuncias"
-            );
+            return res.redirect("/admin/denuncias");
         }
-
-        // ======================
         // ELIMINAR IMAGEN
-        // ======================
-        imagen.estado =
-            "eliminada";
+  
+        imagen.estado ="eliminada";
 
         await imagen.save();
-
-        // ======================
         // BUSCAR PUBLICACIÓN
-        // ======================
-        const publicacion =
-            await Publicacion.findByPk(
-                imagen.publicacion_id
-            );
 
-        // ======================
+        const publicacion =await Publicacion.findByPk(imagen.publicacion_id);
         // BUSCAR AUTOR
-        // ======================
-        const usuario =
-            await User.findByPk(
-                publicacion.usuario_id
-            );
 
-        // ======================
+        const usuario =await User.findByPk(publicacion.usuario_id);
+
         // SUMAR STRIKE
-        // ======================
         usuario.publicaciones_eliminadas += 1;
-
-        // ======================
         // DESACTIVAR CUENTA
-        // ======================
-        if (
-            usuario.publicaciones_eliminadas >= 3
-        ) {
 
-            usuario.estadoCuenta =
-                "inactiva";
+        if (usuario.publicaciones_eliminadas >= 3) {
+
+            usuario.estadoCuenta ="inactiva";
 
             req.session.mensaje =
                 `Imagen eliminada. El usuario ${usuario.username} fue desactivado automáticamente`;
@@ -169,13 +137,19 @@ async (req, res) => {
         }
 
         await usuario.save();
-
-        // ======================
-        // REDIRECT
-        // ======================
-        res.redirect(
-            "/admin/denuncias"
+        await Denuncia.update(
+            {
+                resuelta: true
+            },
+            {
+                where: {
+                    imagen_id: imagenId
+                }
+            }
         );
+        // REDIRECT
+ 
+        res.redirect("/admin/denuncias");
 
     } catch (error) {
 

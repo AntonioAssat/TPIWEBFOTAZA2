@@ -15,6 +15,14 @@ Denuncia.init({
     },
     descripcion: {
         type: DataTypes.TEXT,
+    },
+    resuelta: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+        },
+    fecha: {
+    type: DataTypes.DATE,
+    defaultValue:DataTypes.NOW
     }
 }, {
     sequelize,
