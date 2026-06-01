@@ -51,16 +51,13 @@ export const createPost = async (req, res) => {
             }
 
             if (!imagenesBase64) {
-
-                return res.redirect(
+                    return res.redirect(
                     "/publicaciones/nueva?error=Debés subir al menos una imagen"
                 );
             }
    
         // CREAR PUBLICACIÓN
-        const publicacion =
-            await Publicacion.create({
-
+        const publicacion = await Publicacion.create({
                 titulo,
                 descripcion,
                 usuario_id:usuarioId
@@ -69,32 +66,23 @@ export const createPost = async (req, res) => {
    
         if (tags) {
 
-            const listaTags =
-                tags.split(",");
+            const listaTags =tags.split(",");
 
             for (let nombreTag of listaTags) {
 
                 nombreTag =nombreTag.trim().toLowerCase();
 
                 let tag =await Tag.findOne({
-
-                        where: {
-                            nombre:nombreTag
-                        }
+                        where: {nombre:nombreTag}
                     });
 
                 // crear si no existe
                 if (!tag) {
 
-                    tag =await Tag.create({
-
-                            nombre:nombreTag
-                        });
+                    tag =await Tag.create({nombre:nombreTag});
                 }
                 // relacionar
-                await publicacion.addTag(
-                    tag
-                );
+                await publicacion.addTag(tag);
             }
         }
 
@@ -102,9 +90,7 @@ export const createPost = async (req, res) => {
         if (imagenesBase64) {
 
             // si viene una sola
-            const listaImagenes = Array.isArray(imagenesBase64)
-                    ? imagenesBase64
-                    : [imagenesBase64];
+            const listaImagenes = Array.isArray(imagenesBase64) ? imagenesBase64 : [imagenesBase64];
 
             for (const base64 of listaImagenes) {
 
@@ -141,7 +127,7 @@ export const showPosts = async (req, res) => {
         // BUSCADOR
         const search =req.query.search || "";
 
-        const usuario =req.query.usuario || "";
+        //const usuario =req.query.usuario || "";
 
         const licencia =req.query.licencia || "";
 
@@ -154,19 +140,13 @@ export const showPosts = async (req, res) => {
             ["fecha", "DESC"]
         ];
 
-        if (orden == "antiguas") {
-
-            ordenPublicaciones = [["fecha", "ASC"]];
-        }
 
         // FILTRO LICENCIA
         let filtroLicencia = {};
 
         if (licencia) {
 
-            filtroLicencia = {
-                licencia
-            };
+            filtroLicencia = {licencia};
 
         } else if (!req.session.usuario) {
 
@@ -182,24 +162,31 @@ export const showPosts = async (req, res) => {
 
                 where: search ? {
 
-                        [Op.or]: [
+                    [Op.or]: [
 
-                            {
-                                titulo: {
-                                    [Op.iLike]:
-                                        `%${search}%`
-                                }
-                            },
-
-                            {
-                                '$Tags.nombre$': {
-                                    [Op.iLike]:
-                                        `%${search}%`
-                                }
+                        {
+                            titulo: {
+                                [Op.iLike]:
+                                    `%${search}%`
                             }
-                        ]
-                    }
-                    : undefined,
+                        },
+
+                        {
+                            '$Tags.nombre$': {
+                                [Op.iLike]:
+                                    `%${search}%`
+                            }
+                        },
+
+                        {
+                            '$User.username$': {
+                                [Op.iLike]:
+                                    `%${search}%`
+                            }
+                        }
+                    ]
+                }
+                : undefined,
 
                 include: [
 
@@ -209,19 +196,11 @@ export const showPosts = async (req, res) => {
 
                         attributes: [
                             "id",
-                            "username"
+                            "username",
+                            "avatar"
                         ],
 
-                        where: usuario
-                            ? {
-                                username: {
-                                    [Op.iLike]:
-                                        `%${usuario}%`
-                                }
-                            }
-                            : undefined,
-
-                        required: !!usuario
+                        required: false
                     },
 
                     // IMÁGENES
@@ -306,10 +285,7 @@ export const showPosts = async (req, res) => {
                             0
                         );
 
-                    img.promedio = (
-                        suma /
-                        img.Valoracions.length
-                    ).toFixed(1);
+                    img.promedio = (suma / img.Valoracions.length).toFixed(1);
 
                 } else {
 
@@ -360,8 +336,8 @@ export const showPosts = async (req, res) => {
 
         const publicacionesFiltradas = publicaciones.filter(pub => pub.Imagens && pub.Imagens.length > 0);
 
+        
         let colecciones = [];
-
         if (req.session.usuario) {
 
             colecciones = await Coleccion.findAll({
@@ -373,12 +349,39 @@ export const showPosts = async (req, res) => {
                 });
         }
 
+        // promedio total de publicación
+
+        publicacionesFiltradas.forEach(pub => {
+
+            let suma = 0;
+
+            let cantidad = 0;
+
+            pub.Imagens.forEach(img => {
+
+                if (img.Valoracions) {
+
+                    img.Valoracions.forEach(v => {
+                        suma += v.valor;
+                        cantidad++;
+                    });
+                }
+            });
+
+            pub.promedioPublicacion = cantidad > 0 ? suma / cantidad : 0; 
+        });
+
+        if (orden == "valoradas") {
+            publicacionesFiltradas.sort((a, b) => b.promedioPublicacion - a.promedioPublicacion);
+        }
+        
         res.render("pages/posts", {
 
             publicaciones: publicacionesFiltradas,
             colecciones,
             error
         });
+        
 
     } catch (error) {
 
@@ -441,7 +444,7 @@ export const addComment = async (req, res) => {
                         return res.redirect("/publicaciones?error=Máximo 300 caracteres");
                     }
         
-        // Buscar imagen de la publicación
+        // Buscar la imagen de la publicación ana
    
         const imagen =await Imagen.findByPk(imagenId);
 
@@ -474,7 +477,7 @@ export const addComment = async (req, res) => {
  
         const publicacion =await Publicacion.findByPk(imagen.publicacion_id);
 
-        // No notificar si el autor comenta su propia publicación
+        // No notificamos si el autor comenta su propia publicación
 
         if (publicacion.usuario_id !=usuarioId) {
 
@@ -1075,8 +1078,7 @@ export const denunciarComentario = async (req, res) => {
     }
 };
 //eliminar comentario (solo autor de la publicación)
-export const deleteComment =
-async (req, res) => {
+export const deleteComment = async (req, res) => {
 
     const comentarioId =req.params.id;
     const usuarioId =req.session.usuario.id;
@@ -1295,9 +1297,8 @@ export const editPost = async (req, res) => {
                     `/publicaciones/${publicacionId}/editar?error=El título debe tener al menos 3 caracteres`
                 );
             }
-        // ======================
         // PUBLICACIÓN
-        // ======================
+
         const publicacion =await Publicacion.findByPk(
 
                 publicacionId,

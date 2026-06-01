@@ -10,18 +10,22 @@ html
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
     )
+    link(
+      rel="stylesheet"
+      href="/css/style.css"
+    )
 
   body(class="bg-light")
 
     // ======================
     // NAVBAR
     // ======================
-    nav.navbar.navbar-expand-lg.navbar-dark.bg-dark.mb-4
+    nav.navbar.navbar-expand-lg.navbar-dark.custom-navbar.mb-4.sticky-top.shadow
 
       .container-fluid
 
-        a.navbar-brand(href="/publicaciones")
-          | Fotaza
+        a.navbar-brand.fw-bold.fs-3(href="/publicaciones")
+          | 📸 Fotaza
 
         button.navbar-toggler(
           type="button"
@@ -34,60 +38,95 @@ html
         #navbarNav.collapse.navbar-collapse
 
           ul.navbar-nav.me-auto
+            
+            li.nav-item
+
+              a.nav-link(href="/publicaciones")
+                | 🏠 Inicio
 
             li.nav-item
 
               a.nav-link(href="/feed")
-                | Feed
+                | 📰Feed
 
             li.nav-item
 
               a.nav-link(href="/publicaciones/nueva")
-                | Nueva publicación
-
-            li.nav-item
-
-              a.nav-link(href="/notificaciones")
-                | Notificaciones
+                | ➕Publicar
 
             li.nav-item
 
               a.nav-link(href="/conversaciones")
-                | Conversaciones
+                | 💬Conversaciones
 
             li.nav-item
 
               a.nav-link(href="/colecciones")
-                | Colecciones
+                | ⭐Colecciones
             
             if usuario && usuario.rol == "admin"
 
-              li.nav-item
+              li.nav-item.ms-2
 
-                a.nav-link.text-warning(
+                a.btn.btn-warning.btn-sm(
                   href="/admin/denuncias"
                 )
-                  | Panel Admin
+                  | 🛡️ Admin
           if usuario
 
             ul.navbar-nav
 
-              li.nav-item
+              li.nav-item.dropdown
 
-                a.nav-link(href=`/perfil/${usuario.id}`)
-                  | Mi perfil
+                a.nav-link.dropdown-toggle.d-flex.align-items-center.gap-2(
+                  href="#"
+                  role="button"
+                  data-bs-toggle="dropdown"
+                )
 
-              li.nav-item
+                  img.rounded-circle(
+                    src=usuario.avatar
+                    width="35"
+                    height="35"
+                    style="object-fit:cover;"
+                  )
 
-                a.nav-link.text-danger(href="/logout")
-                  | Cerrar sesión
+                  span= usuario.username
+
+                ul.dropdown-menu.dropdown-menu-end.shadow
+
+                  li
+
+                    a.dropdown-item(
+                      href=`/perfil/${usuario.id}`
+                    )
+                      | Mi perfil
+
+                  li
+
+                    a.dropdown-item(
+                      href="/notificaciones"
+                    )
+                      | Notificaciones
+
+                  li
+
+                    hr.dropdown-divider
+
+                  li
+
+                    a.dropdown-item.text-danger(
+                      href="/logout"
+                    )
+                      | Cerrar sesión
 
     // ======================
     // CONTENIDO
     // ======================
     .container
 
-      h1.mb-4 Publicaciones
+      h1.display-5.fw-bold.mb-4
+        | 📸 Publicaciones
 
 
       if error
@@ -106,92 +145,47 @@ html
       // ======================
       // BUSCADOR
       // ======================
-      form(
-        action="/publicaciones"
-        method="GET"
-        class="mb-4"
+      button.btn.btn-primary.buscador-flotante(
+        type="button"
+        data-bs-toggle="modal"
+        data-bs-target="#buscadorModal"
       )
+        span.icono 🔍
 
-        .mb-2
-
-          label.form-label(
-            for="search"
-          )
-            | Buscar publicaciones o etiquetas
-
-          input.form-control(
-            type="text"
-            name="search"
-            id="search"
-            minlength="2"
-          )
-
-          .mb-2
-
-            label.form-label(
-              for="usuario"
-            )
-              | Buscar por usuario
-
-            input.form-control(
-              type="text"
-              name="usuario"
-              id="usuario"
-            )
-
-          .mb-2
-
-            label.form-label(
-              for="licencia"
-            )
-              | Filtrar por licencia
-
-            select.form-select(
-              name="licencia"
-              id="licencia"
-            )
-
-              option(value="")
-                | Todas
-
-              option(value="libre")
-                | Libre
-
-              option(value="copyright")
-                | Copyright
-
-          .mb-2
-
-            label.form-label(
-              for="orden"
-            )
-              | Ordenar por
-
-            select.form-select(
-              name="orden"
-              id="orden"
-            )
-
-              option(value="recientes")
-                | Más recientes
-
-              option(value="antiguas")
-                | Más antiguas
-        button.btn.btn-primary(type="submit")
-          | Buscar
+        span.texto-busqueda Buscar Publicaciones 
 
       // ======================
       // LISTADO
       // ======================
       each pub in publicaciones
 
-        .card.mb-4.shadow-sm
+        .card.mb-5.shadow.border-0
 
-          .card-body
+          .card-body.p-4
+            if pub.User
 
-            // ======================
-            // TÍTULO
-            // ======================
+              .d-flex.align-items-center.mb-3
+
+                img.rounded-circle.me-2(
+                  src=pub.User.avatar || "/img/default.png"
+                  width="45"
+                  height="45"
+                  style="object-fit:cover;"
+                )
+
+                div
+
+                  a(
+                    href=`/perfil/${pub.User.id}`
+                    class="text-decoration-none fw-bold"
+                  )
+                    = pub.User.username
+
+                  br
+
+                  small.text-muted
+                    | 📅 #{pub.fecha.toLocaleDateString("es-AR")}
+
             h2.card-title.mb-3
               = pub.titulo
 
@@ -210,22 +204,6 @@ html
             // ======================
             // AUTOR
             // ======================
-            if pub.User
-
-              p.mb-3
-
-                strong Autor:
-                |  
-
-                a(
-                  href=`/perfil/${pub.User.id}`
-                  class="text-decoration-none"
-                )
-                  = pub.User.username
-
-            else
-
-              p Autor: Sin usuario
 
             // ======================
             // GUARDAR EN COLECCIÓN
@@ -451,17 +429,17 @@ html
                                               | denunciado por 
                                               = d.User.username
 
-                                      form(
+                                  form(
                                         action=`/comentarios/${c.id}/eliminar`
                                         method="POST"
                                         class="mt-3"
                                         onsubmit="return confirm('¿Eliminar comentario denunciado?')"
                                       )
 
-                                        button.btn.btn-danger.btn-sm(
-                                          type="submit"
+                                    button.btn.btn-danger.btn-sm(
+                                      type="submit"
                                         )
-                                          | 🗑 Eliminar comentario
+                                         | 🗑 Eliminar comentario  
 
                                 // ======================
                                 // DENUNCIAR COMENTARIO
@@ -777,7 +755,80 @@ html
       style="position:fixed; bottom:30px; right:30px; width:70px; height:70px; font-size:35px; display:flex; align-items:center; justify-content:center; z-index:999;"
     )
       | +
+    script(src="/js/navbar.js")
+    
+    #buscadorModal.modal.fade(
+      tabindex="-1"
+    )
 
+      .modal-dialog
+
+        .modal-content
+
+          .modal-header
+
+            h5.modal-title
+              | 🔎 Buscar publicaciones
+
+            button.btn-close(
+              type="button"
+              data-bs-dismiss="modal"
+            )
+
+          .modal-body
+
+            form(
+              action="/publicaciones"
+              method="GET"
+            )
+
+              .mb-3
+
+                label.form-label
+                  | Buscar publicaciones, etiquetas o usuarios
+
+                input.form-control(
+                  type="text"
+                  name="search"
+                )
+
+              .mb-3
+
+                label.form-label
+                  | Licencia
+
+                select.form-select(
+                  name="licencia"
+                )
+
+                  option(value="")
+                    | Todas
+
+                  option(value="libre")
+                    | Libre
+
+                  option(value="copyright")
+                    | Copyright
+
+              .mb-3
+
+                label.form-label
+                  | Orden
+
+                select.form-select(
+                  name="orden"
+                )
+
+                  option(value="recientes")
+                    | Más recientes
+
+                  option(value="valoradas")
+                    | Más valoradas
+
+              button.btn.btn-primary.w-100(
+                type="submit"
+              )
+                | Buscar
     script(
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
     )

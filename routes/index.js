@@ -4,7 +4,6 @@ import { isAuthenticated } from "../middlewares/auth.js";
 
 const router = express.Router();
 
-//router.get("/", home);
 router.get("/", showHome);
 
 //ruta protegida
