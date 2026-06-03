@@ -18,8 +18,13 @@ try {
     await sequelize.authenticate();
 
     console.log("Conectado a PostgreSQL");
+
+    await sequelize.sync({ alter: true });
+
+    console.log("Tablas sincronizadas");
+
 } catch (error) {
-    console.error("Error de conexión:",error);
+    console.error("Error de conexión:", error);
 }
 //reinicia servidor
 //await sequelize.sync();
