@@ -3,9 +3,11 @@ import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import session from "express-session";
+import connectSessionSequelize from "connect-session-sequelize";
 dotenv.config();
 //temporal 
 import sequelize from "./config/database.js";
+const SequelizeStore =connectSessionSequelize(session.Store);
 //USO DE MODELS
 import User from "./models/User.js";
 import "./models/Conversacion.js";
@@ -58,14 +60,25 @@ app.use(express.static(path.join(__dirname, "public")));
 
 app.set("trust proxy", 1);
 
+const sessionStore = new SequelizeStore({
+    db: sequelize
+});
+
+sessionStore.sync();
+
 app.use(session({
     secret: process.env.SESSION_SECRET,
+
+    store: sessionStore,
+
     resave: false,
     saveUninitialized: false,
+
     cookie: {
         secure: true,
         sameSite: "none",
-        httpOnly: true
+        httpOnly: true,
+        maxAge: 1000 * 60 * 60 * 24
     }
 }));
 
