@@ -178,20 +178,26 @@ export const loginUser = async (req, res) => {
         // SESIÓN
         // ======================
         req.session.usuario = {
-
-            id:
-                usuario.id,
-
-            username:
-                usuario.username,
-
-            rol:
-                usuario.rol,
-
-            avatar:
-                usuario.avatar
+            id: usuario.id,
+            username: usuario.username,
+            rol: usuario.rol,
+            avatar: usuario.avatar
         };
 
+        req.session.save((err) => {
+
+            if (err) {
+                console.error(err);
+
+                return res.status(500).render("pages/error", {
+                    codigo: "500",
+                    mensaje: "Error al iniciar sesión",
+                    descripcion: "Intentá nuevamente más tarde."
+                });
+            }
+
+    res.redirect("/publicaciones");
+});
         // ======================
         // REDIRECT
         // ======================
