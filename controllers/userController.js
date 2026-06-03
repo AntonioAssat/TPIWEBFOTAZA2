@@ -198,13 +198,7 @@ export const loginUser = async (req, res) => {
 
     res.redirect("/publicaciones");
 });
-        // ======================
-        // REDIRECT
-        // ======================
-        res.redirect(
-            "/publicaciones"
-        );
-
+        
     } catch (error) {
 
         console.error(error);
