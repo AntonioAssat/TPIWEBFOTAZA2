@@ -1,6 +1,7 @@
 import express from "express";
 import {
     showDenuncias,
+    showHistorial,
     aprobarImagen,
     eliminarImagen
 }
@@ -23,6 +24,13 @@ router.get(
     isAuthenticated,
     isAdmin,
     showDenuncias
+);
+
+router.get(
+    "/admin/historial",
+    isAuthenticated,
+    isAdmin,
+    showHistorial
 );
 
 router.post(

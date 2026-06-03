@@ -131,6 +131,9 @@ export const showPosts = async (req, res) => {
 
         const licencia =req.query.licencia || "";
 
+        console.log("LICENCIA:", licencia);
+        console.log("QUERY:", req.query);
+
         const orden =req.query.orden || "recientes";
 
         const error =req.query.error || null;
@@ -538,8 +541,7 @@ export const closeComments = async (req, res) => {
 
         // Cerrar comentarios
         
-        imagen.comentarios_cerrados =
-            true;
+        imagen.comentarios_cerrados =true;
 
         await imagen.save();
 

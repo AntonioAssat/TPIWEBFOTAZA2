@@ -162,3 +162,48 @@ export const eliminarImagen =async (req, res) => {
         });
     }
 };
+
+export const showHistorial = async (req, res) => {
+
+    try {
+
+        const imagenes = await Imagen.findAll({
+
+            where: {
+
+                estado: "eliminada"
+            },
+
+            include: [
+
+                {
+                    model: Publicacion,
+
+                    include: [
+
+                        {
+                            model: User
+                        }
+                    ]
+                }
+            ]
+        });
+
+        res.render("pages/adminHistorial",{
+                imagenes,
+                usuario: req.session.usuario
+            }
+        );
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).render("pages/error",{
+                codigo: "500",
+                mensaje: "Error al cargar historial",
+                descripcion: "Intentá nuevamente más tarde."
+            }
+        );
+    }
+};

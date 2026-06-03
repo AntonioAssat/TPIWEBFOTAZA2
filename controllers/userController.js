@@ -461,12 +461,14 @@ export const updatePerfil = async (req, res) => {
         // ======================
         const usuario = await User.findByPk(userId);
 
-        return res.status(404).render("pages/error",{
+        if (!usuario) {
+
+            return res.status(404).render("pages/error",{
                 codigo: "404",
                 mensaje:"Usuario no encontrado",
                 descripcion:"El perfil no existe."
-            }
-        );
+            });
+        }
 
         // ======================
         // VALIDAR USERNAME
