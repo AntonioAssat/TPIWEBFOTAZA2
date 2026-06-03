@@ -92,9 +92,17 @@ app.use(conversacionesRoutes);
 //admin
 app.use(adminRoutes);
 // Servidor
-app.listen(PORT, () => {
-    console.log(`Servidor corriendo en http://localhost:${PORT}`);
-});
+if (process.env.VERCEL !== "1") {
+
+    app.listen(PORT, () => {
+
+        console.log(
+            `Servidor corriendo en http://localhost:${PORT}`
+        );
+    });
+}
+
+export default app;
 
 //temporal sequelize
 //sequelize.authenticate()
