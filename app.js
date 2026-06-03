@@ -69,6 +69,15 @@ app.use(session({
     }
 }));
 
+app.use((req, res, next) => {
+
+    console.log("URL:", req.originalUrl);
+
+    console.log("USUARIO SESION:", req.session.usuario);
+
+    next();
+});
+
 // PASAR USUARIO A TODAS LAS VISTAS
 app.use((req, res, next) => {
     res.locals.usuario = req.session.usuario;
