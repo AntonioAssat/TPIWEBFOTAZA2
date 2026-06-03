@@ -181,7 +181,6 @@ export const loginUser = async (req, res) => {
             id: usuario.id,
             username: usuario.username,
             rol: usuario.rol,
-            avatar: usuario.avatar
         };
 
         req.session.save((err) => {
