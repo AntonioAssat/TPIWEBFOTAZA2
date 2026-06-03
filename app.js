@@ -56,12 +56,15 @@ app.use(express.json({
 // Archivos estáticos
 app.use(express.static(path.join(__dirname, "public")));
 
+app.set("trust proxy", 1);
+
 app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: false,   //importante en localhost
+        secure: true,
+        sameSite: "none",
         httpOnly: true
     }
 }));
