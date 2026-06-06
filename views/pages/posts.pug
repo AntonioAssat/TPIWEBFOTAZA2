@@ -16,7 +16,6 @@ html
     )
 
   body(class="bg-light")
-
     // ======================
     // NAVBAR
     // ======================
@@ -36,42 +35,60 @@ html
           span.navbar-toggler-icon
 
         #navbarNav.collapse.navbar-collapse
-
+          
           ul.navbar-nav.me-auto
-            
-            li.nav-item
+            if usuario  
+              li.nav-item
 
-              a.nav-link(href="/publicaciones")
-                | 🏠 Inicio
+                a.nav-link(href="/publicaciones")
+                  | 🏠 Inicio
 
-            li.nav-item
+              li.nav-item
 
-              a.nav-link(href="/feed")
-                | 📰Feed
+                a.nav-link(href="/feed")
+                  | 📰Feed
 
-            li.nav-item
+              li.nav-item
 
-              a.nav-link(href="/publicaciones/nueva")
-                | ➕Publicar
+                a.nav-link(href="/publicaciones/nueva")
+                  | ➕Publicar
 
-            li.nav-item
+              li.nav-item
 
-              a.nav-link(href="/conversaciones")
-                | 💬Conversaciones
+                a.nav-link(href="/conversaciones")
+                  | 💬Conversaciones
 
-            li.nav-item
+              li.nav-item
 
-              a.nav-link(href="/colecciones")
-                | ⭐Colecciones
-            
-            if usuario && usuario.rol == "admin"
+                a.nav-link(href="/colecciones")
+                  | ⭐Colecciones
+              
+              if usuario && usuario.rol == "admin"
 
-              li.nav-item.ms-2
+                li.nav-item.ms-2
 
-                a.btn.btn-warning.btn-sm(
-                  href="/admin/denuncias"
-                )
-                  | 🛡️ Admin
+                  a.btn.btn-warning.btn-sm(
+                    href="/admin/denuncias"
+                  )
+                    | 🛡️ Admin
+
+            else
+
+              ul.navbar-nav
+
+                li.nav-item.me-2
+
+                  a.btn.btn-outline-light(
+                    href="/login"
+                  )
+                    | Iniciar sesión
+
+                li.nav-item
+
+                  a.btn.btn-primary(
+                    href="/registro"
+                  )
+                    | Registrarse       
           if usuario
 
             ul.navbar-nav

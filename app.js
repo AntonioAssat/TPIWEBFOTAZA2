@@ -75,26 +75,41 @@ app.use(session({
     saveUninitialized: false,
 
     cookie: {
-        secure: true,
-        sameSite: "none",
+        secure: process.env.VERCEL === "1",
+        sameSite: process.env.VERCEL === "1" ? "none" : "lax",
         httpOnly: true,
         maxAge: 1000 * 60 * 60 * 24
     }
 }));
 
-app.use((req, res, next) => {
-
-    console.log("URL:", req.originalUrl);
-
-    console.log("USUARIO SESION:", req.session.usuario);
-
-    next();
-});
-
 // PASAR USUARIO A TODAS LAS VISTAS
-app.use((req, res, next) => {
-    res.locals.usuario = req.session.usuario;
-    next();
+app.use(async (req, res, next) => {
+
+    try {
+
+        if (req.session.usuario) {
+
+            const usuarioBD = await User.findByPk(
+                req.session.usuario.id
+            );
+
+            res.locals.usuario = usuarioBD;
+
+        } else {
+
+            res.locals.usuario = null;
+        }
+
+        next();
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.locals.usuario = null;
+
+        next();
+    }
 });
 //mostrar mensaje de denuncias
 app.use((req, res, next) => {
