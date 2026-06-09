@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 import sequelize from "../config/database.js";
-
+import { ejecutarSeed } from "./seed.js";
 
 import "../models/User.js";
 import "../models/Publicacion.js";
@@ -18,11 +18,14 @@ import "../models/Interes.js";
 import "../models/Conversacion.js";
 import "../models/Mensaje.js";
 
+
 try {
 
     await sequelize.sync({
         alter: true
     });
+
+    await ejecutarSeed();
 
     console.log("Base de datos inicializada correctamente");
 
