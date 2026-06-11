@@ -127,7 +127,7 @@ http://localhost:3000
 
 ---
 
-# Usuarios de prueba
+# Usuarios de prueba tanto para local como para Vercel
 
 ## Administrador
 
@@ -404,7 +404,7 @@ Los seeders generan usuarios de prueba para facilitar la evaluación del sistema
 Administrador:
 
 Email:
-[ignacioOrellano@fotaza.com](mailto:ignacioOrellano@gmail.com)
+[ignacioOrellano@gmail.com](mailto:ignacioOrellano@gmail.com)
 
 Contraseña:
 12345678
@@ -462,6 +462,51 @@ El proyecto fue desplegado utilizando:
 URL del deploy:
 
 https://tpiwebfotaza-2.vercel.app/
+
+Usuarios de prueba
+
+## Administrador
+
+Email:
+
+```text
+ignacioOrellano@gmail.com
+```
+
+Contraseña:
+
+```text
+12345678
+```
+
+Rol:
+
+```text
+admin
+```
+
+---
+
+## Usuario normal
+
+Email:
+
+```text
+mariano@gmail.com
+```
+
+Contraseña:
+
+```text
+12345678
+```
+
+Rol:
+
+```text
+usuario
+```
+
 ---
 
 # Problemas encontrados durante el desarrollo
